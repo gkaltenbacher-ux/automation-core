@@ -110,7 +110,7 @@ async def serve_dashboard():
 
 # --- Health ---
 
-@app.get("/api/health")
+@app.api_route("/api/health", methods=["GET", "HEAD"])
 async def health():
     db_ok = os.path.exists(db._db_path)
     return {
