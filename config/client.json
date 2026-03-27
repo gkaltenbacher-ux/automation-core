@@ -1,0 +1,36 @@
+{
+  "company_name": "Test GmbH",
+  "language": "de",
+  "dashboard_title": "Test Dashboard",
+  "dashboard_logo_url": "",
+
+  "automations": [
+    {
+      "name": "System-Check",
+      "description": "Prüft ob alle Systeme funktionieren",
+      "schedule": "*/5 * * * *",
+      "enabled": true,
+      "steps": [
+        {
+          "block": "system_check",
+          "config": {}
+        }
+      ]
+    }
+  ],
+
+  "api_keys_needed": [
+    {
+      "provider": "openai",
+      "label": "OpenAI",
+      "emoji": "\ud83e\udd16",
+      "guide": "1. Gehe zu platform.openai.com\n2. Klicke API Keys\n3. Create new key\n4. Kopiere und füge hier ein"
+    },
+    {
+      "provider": "slack",
+      "label": "Slack Webhook",
+      "emoji": "\ud83d\udcac",
+      "guide": "1. Gehe zu api.slack.com/apps\n2. Erstelle eine neue App\n3. Aktiviere Incoming Webhooks\n4. Kopiere die Webhook-URL"
+    }
+  ]
+}

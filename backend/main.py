@@ -127,7 +127,6 @@ async def login(request: Request):
     ip = request.client.host
 
     if not rate_limiter.check_rate_limit(ip):
-        await rate_limiter.record_attempt(ip, False)
         raise HTTPException(status_code=429, detail="Zu viele Versuche. Bitte 60 Sekunden warten.")
 
     body = await request.json()

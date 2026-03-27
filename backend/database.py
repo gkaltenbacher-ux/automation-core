@@ -8,7 +8,7 @@ import asyncio
 import sqlite3
 import os
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from backend.config import DATABASE_PATH
 
 
@@ -208,20 +208,24 @@ class Database:
     # --- Login Attempts ---
 
     async def record_login_attempt(self, ip_address: str, success: bool):
-        await self.enqueue(
+        """Schreibt direkt (nicht über Queue), damit Rate-Limiting sofort greift."""
+        conn = self._get_conn()
+        conn.execute(
             "INSERT INTO login_attempts (ip_address, timestamp, success) VALUES (?, ?, ?)",
-            (ip_address, datetime.now().isoformat(), int(success)),
+            (ip_address, datetime.utcnow().isoformat(), int(success)),
         )
+        conn.commit()
+        conn.close()
 
     def get_recent_login_attempts(self, ip_address: str, minutes: int = 1) -> list:
         conn = self._get_conn()
-        cutoff = datetime.now().isoformat()
+        cutoff = (datetime.utcnow() - timedelta(minutes=minutes)).isoformat()
         rows = conn.execute(
             """SELECT * FROM login_attempts
                WHERE ip_address = ?
-               AND timestamp > datetime('now', ?)
+               AND timestamp > ?
                ORDER BY id DESC""",
-            (ip_address, f"-{minutes} minutes"),
+            (ip_address, cutoff),
         ).fetchall()
         conn.close()
         return [dict(r) for r in rows]
