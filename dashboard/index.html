@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        [x-cloak] { display: none !important; }
+        .fade-in { animation: fadeIn 0.3s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+<!-- ==================== LOGIN ==================== -->
+<div x-data="loginApp()" x-cloak>
+    <template x-if="!authenticated">
+        <div class="min-h-screen flex items-center justify-center px-4">
+            <div class="bg-white rounded-2xl shadow-lg p-8 w-full max-w-sm">
+                <h1 class="text-2xl font-bold text-gray-800 text-center mb-2" x-text="title"></h1>
+                <p class="text-gray-500 text-center mb-6">Bitte anmelden</p>
+                <form @submit.prevent="login()">
+                    <input type="password" x-model="password" placeholder="Passwort"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none mb-3"
+                        :class="error ? 'border-red-400' : ''">
+                    <p x-show="error" x-text="error" class="text-red-500 text-sm mb-3"></p>
+                    <button type="submit" :disabled="loading"
+                        class="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50">
+                        <span x-show="!loading">Anmelden</span>
+                        <span x-show="loading">Wird geprüft...</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </template>
+
+    <!-- ==================== DASHBOARD ==================== -->
+    <template x-if="authenticated">
+        <div class="fade-in">
+            <!-- Header -->
+            <header class="bg-white border-b border-gray-200 px-4 sm:px-6 py-4">
+                <div class="max-w-5xl mx-auto flex items-center justify-between">
+                    <div>
+                        <h1 class="text-xl font-bold text-gray-800" x-text="title"></h1>
+                        <p class="text-sm text-gray-500" x-text="companyName"></p>
+                    </div>
+                    <button @click="logout()" class="text-sm text-gray-500 hover:text-red-500 transition">Abmelden</button>
+                </div>
+            </header>
+
+            <!-- Tabs -->
+            <div class="max-w-5xl mx-auto px-4 sm:px-6 mt-6">
+                <div class="flex space-x-1 bg-gray-100 rounded-lg p-1 mb-6">
+                    <template x-for="t in tabs" :key="t.id">
+                        <button @click="tab = t.id"
+                            :class="tab === t.id ? 'bg-white shadow text-gray-800' : 'text-gray-500 hover:text-gray-700'"
+                            class="flex-1 py-2 px-3 rounded-md text-sm font-medium transition" x-text="t.label">
+                        </button>
+                    </template>
+                </div>
+
+                <!-- Tab: API-Schlüssel -->
+                <div x-show="tab === 'keys'" x-data="keysApp()" x-init="loadKeys()" class="fade-in">
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        <template x-for="provider in providers" :key="provider.provider">
+                            <div class="bg-white rounded-xl border border-gray-200 p-5">
+                                <div class="flex items-center justify-between mb-3">
+                                    <div class="flex items-center space-x-2">
+                                        <span x-text="provider.emoji" class="text-xl"></span>
+                                        <h3 class="font-semibold text-gray-800" x-text="provider.label"></h3>
+                                    </div>
+                                    <span x-show="provider.saved"
+                                        class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Gespeichert</span>
+                                </div>
+
+                                <div x-show="provider.saved && !provider.editing" class="mb-3">
+                                    <p class="text-sm text-gray-500 font-mono" x-text="provider.masked"></p>
+                                </div>
+
+                                <div x-show="!provider.saved || provider.editing" class="mb-3">
+                                    <input type="password" x-model="provider.newKey" :placeholder="'Key eingeben...'"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none">
+                                </div>
+
+                                <div class="flex space-x-2">
+                                    <template x-if="!provider.saved || provider.editing">
+                                        <button @click="saveKey(provider)"
+                                            class="text-sm bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 transition">
+                                            Speichern
+                                        </button>
+                                    </template>
+                                    <template x-if="provider.saved && !provider.editing">
+                                        <button @click="provider.editing = true"
+                                            class="text-sm bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg hover:bg-gray-200 transition">
+                                            Ändern
+                                        </button>
+                                    </template>
+                                    <template x-if="provider.saved">
+                                        <button @click="testKey(provider)"
+                                            class="text-sm bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg hover:bg-gray-200 transition">
+                                            Testen
+                                        </button>
+                                    </template>
+                                </div>
+
+                                <!-- Anleitung -->
+                                <div class="mt-3">
+                                    <button @click="provider.showGuide = !provider.showGuide"
+                                        class="text-xs text-blue-500 hover:text-blue-700">
+                                        <span x-show="!provider.showGuide">Anleitung zeigen</span>
+                                        <span x-show="provider.showGuide">Anleitung ausblenden</span>
+                                    </button>
+                                    <div x-show="provider.showGuide" class="mt-2 text-xs text-gray-500 whitespace-pre-line bg-gray-50 rounded-lg p-3"
+                                        x-text="provider.guide"></div>
+                                </div>
+
+                                <p x-show="provider.message" x-text="provider.message"
+                                    :class="provider.messageType === 'error' ? 'text-red-500' : 'text-green-600'"
+                                    class="text-xs mt-2"></p>
+                            </div>
+                        </template>
+                    </div>
+                    <p x-show="providers.length === 0" class="text-gray-400 text-center py-8">Keine API-Keys konfiguriert.</p>
+                </div>
+
+                <!-- Tab: Automationen -->
+                <div x-show="tab === 'automations'" x-data="automationsApp()" x-init="loadAutomations()" class="fade-in">
+                    <div class="grid gap-4">
+                        <template x-for="auto in automations" :key="auto.name">
+                            <div class="bg-white rounded-xl border border-gray-200 p-5">
+                                <div class="flex items-center justify-between mb-2">
+                                    <div>
+                                        <h3 class="font-semibold text-gray-800" x-text="auto.name"></h3>
+                                        <p class="text-sm text-gray-500" x-text="auto.description"></p>
+                                    </div>
+                                    <div class="flex items-center space-x-3">
+                                        <span class="text-xs text-gray-400" x-text="auto.schedule"></span>
+                                        <button @click="toggle(auto)"
+                                            :class="auto.enabled ? 'bg-blue-600' : 'bg-gray-300'"
+                                            class="relative w-11 h-6 rounded-full transition">
+                                            <span :class="auto.enabled ? 'translate-x-5' : 'translate-x-0.5'"
+                                                class="inline-block w-5 h-5 bg-white rounded-full shadow transform transition mt-0.5"></span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="flex flex-wrap gap-1.5 mb-3">
+                                    <template x-for="step in auto.steps" :key="step">
+                                        <span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded" x-text="step"></span>
+                                    </template>
+                                </div>
+
+                                <!-- Letzte Runs -->
+                                <button @click="auto.showRuns = !auto.showRuns; if(auto.showRuns) loadRuns(auto)"
+                                    class="text-xs text-blue-500 hover:text-blue-700">
+                                    <span x-show="!auto.showRuns">Letzte Runs zeigen</span>
+                                    <span x-show="auto.showRuns">Runs ausblenden</span>
+                                </button>
+                                <div x-show="auto.showRuns" class="mt-2 space-y-1">
+                                    <template x-for="run in auto.runs" :key="run.id">
+                                        <div class="flex items-center justify-between text-xs bg-gray-50 rounded-lg px-3 py-2">
+                                            <span class="text-gray-500" x-text="run.started_at"></span>
+                                            <span :class="run.status === 'success' ? 'text-green-600' : run.status === 'error' ? 'text-red-500' : 'text-yellow-600'"
+                                                x-text="run.status === 'success' ? 'Erfolgreich' : run.status === 'error' ? 'Fehler' : 'Läuft...'"></span>
+                                        </div>
+                                    </template>
+                                    <p x-show="auto.runs && auto.runs.length === 0" class="text-xs text-gray-400">Noch keine Runs.</p>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                    <p x-show="automations.length === 0" class="text-gray-400 text-center py-8">Keine Automationen konfiguriert.</p>
+                </div>
+
+                <!-- Tab: Aktivität -->
+                <div x-show="tab === 'logs'" x-data="logsApp()" x-init="loadLogs(); startStream()" class="fade-in">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex space-x-2">
+                            <select x-model="filterLevel" @change="loadLogs()"
+                                class="text-sm border border-gray-300 rounded-lg px-3 py-1.5 outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="">Alle Level</option>
+                                <option value="info">Info</option>
+                                <option value="warning">Warnung</option>
+                                <option value="error">Fehler</option>
+                            </select>
+                        </div>
+                        <button @click="loadLogs()" class="text-sm text-blue-500 hover:text-blue-700">Aktualisieren</button>
+                    </div>
+
+                    <div class="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
+                        <template x-for="entry in logs" :key="entry.id">
+                            <div class="px-4 py-3 flex items-start space-x-3">
+                                <span :class="{
+                                    'bg-blue-100 text-blue-700': entry.level === 'info',
+                                    'bg-yellow-100 text-yellow-700': entry.level === 'warning',
+                                    'bg-red-100 text-red-700': entry.level === 'error'
+                                }" class="text-xs px-2 py-0.5 rounded-full font-medium mt-0.5 shrink-0"
+                                    x-text="entry.level === 'info' ? 'Info' : entry.level === 'warning' ? 'Warnung' : 'Fehler'"></span>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm text-gray-800" x-text="entry.message"></p>
+                                    <div class="flex space-x-3 mt-1">
+                                        <span class="text-xs text-gray-400" x-text="entry.timestamp"></span>
+                                        <span x-show="entry.automation_name" class="text-xs text-gray-400" x-text="entry.automation_name"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                    <p x-show="logs.length === 0" class="text-gray-400 text-center py-8">Noch keine Log-Einträge.</p>
+                </div>
+            </div>
+        </div>
+    </template>
+</div>
+
+<script>
+    const API = '';
+
+    function getToken() {
+        return sessionStorage.getItem('auth_token') || '';
+    }
+
+    function authHeaders() {
+        return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() };
+    }
+
+    async function api(path, options = {}) {
+        const res = await fetch(API + path, { headers: authHeaders(), ...options });
+        if (res.status === 401) {
+            sessionStorage.removeItem('auth_token');
+            location.reload();
+            return null;
+        }
+        return res;
+    }
+
+    function loginApp() {
+        return {
+            password: '',
+            error: '',
+            loading: false,
+            authenticated: !!sessionStorage.getItem('auth_token'),
+            title: 'Dashboard',
+            companyName: '',
+            tab: 'keys',
+            tabs: [
+                { id: 'keys', label: 'API-Schlüssel' },
+                { id: 'automations', label: 'Automationen' },
+                { id: 'logs', label: 'Aktivität' },
+            ],
+            async init() {
+                if (this.authenticated) await this.loadConfig();
+            },
+            async login() {
+                this.loading = true;
+                this.error = '';
+                try {
+                    const res = await fetch(API + '/api/auth/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ password: this.password }),
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        sessionStorage.setItem('auth_token', data.token);
+                        this.authenticated = true;
+                        await this.loadConfig();
+                    } else {
+                        const err = await res.json();
+                        this.error = err.detail || 'Anmeldung fehlgeschlagen';
+                    }
+                } catch (e) {
+                    this.error = 'Verbindung zum Server fehlgeschlagen';
+                }
+                this.loading = false;
+            },
+            async loadConfig() {
+                const res = await api('/api/config');
+                if (res && res.ok) {
+                    const data = await res.json();
+                    this.title = data.dashboard_title || 'Dashboard';
+                    this.companyName = data.company_name || '';
+                    document.title = this.title;
+                }
+            },
+            logout() {
+                sessionStorage.removeItem('auth_token');
+                this.authenticated = false;
+                this.password = '';
+            }
+        };
+    }
+
+    function keysApp() {
+        return {
+            providers: [],
+            async loadKeys() {
+                // Konfigurierte Provider laden
+                const configRes = await api('/api/config');
+                let needed = [];
+                if (configRes && configRes.ok) {
+                    const config = await configRes.json();
+                    needed = config.api_keys_needed || [];
+                }
+                // Gespeicherte Keys laden
+                const keysRes = await api('/api/keys');
+                let saved = {};
+                if (keysRes && keysRes.ok) {
+                    const data = await keysRes.json();
+                    for (const k of data.keys) saved[k.provider] = k;
+                }
+                // Zusammenführen
+                this.providers = needed.map(p => ({
+                    provider: p.provider,
+                    label: p.label,
+                    emoji: p.emoji || '',
+                    guide: p.guide || '',
+                    saved: !!saved[p.provider],
+                    masked: saved[p.provider] ? saved[p.provider].masked_key : '',
+                    newKey: '',
+                    editing: false,
+                    showGuide: false,
+                    message: '',
+                    messageType: '',
+                }));
+            },
+            async saveKey(provider) {
+                if (!provider.newKey.trim()) { provider.message = 'Bitte Key eingeben'; provider.messageType = 'error'; return; }
+                const res = await api('/api/keys', {
+                    method: 'POST',
+                    body: JSON.stringify({ provider: provider.provider, key: provider.newKey }),
+                });
+                if (res && res.ok) {
+                    provider.message = 'Gespeichert!';
+                    provider.messageType = 'success';
+                    provider.newKey = '';
+                    provider.editing = false;
+                    await this.loadKeys();
+                } else {
+                    provider.message = 'Fehler beim Speichern';
+                    provider.messageType = 'error';
+                }
+                setTimeout(() => provider.message = '', 3000);
+            },
+            async testKey(provider) {
+                const res = await api('/api/keys/test', {
+                    method: 'POST',
+                    body: JSON.stringify({ provider: provider.provider }),
+                });
+                if (res && res.ok) {
+                    const data = await res.json();
+                    provider.message = data.message;
+                    provider.messageType = data.status === 'ok' ? 'success' : 'error';
+                }
+                setTimeout(() => provider.message = '', 3000);
+            }
+        };
+    }
+
+    function automationsApp() {
+        return {
+            automations: [],
+            async loadAutomations() {
+                const res = await api('/api/automations');
+                if (res && res.ok) {
+                    const data = await res.json();
+                    this.automations = data.automations.map(a => ({ ...a, showRuns: false, runs: [] }));
+                }
+            },
+            async toggle(auto) {
+                const res = await api('/api/automations/toggle', {
+                    method: 'POST',
+                    body: JSON.stringify({ name: auto.name }),
+                });
+                if (res && res.ok) {
+                    const data = await res.json();
+                    auto.enabled = data.enabled;
+                }
+            },
+            async loadRuns(auto) {
+                const res = await api('/api/automations/runs?name=' + encodeURIComponent(auto.name) + '&limit=10');
+                if (res && res.ok) {
+                    const data = await res.json();
+                    auto.runs = data.runs;
+                }
+            }
+        };
+    }
+
+    function logsApp() {
+        return {
+            logs: [],
+            filterLevel: '',
+            eventSource: null,
+            async loadLogs() {
+                let url = '/api/logs?limit=100';
+                if (this.filterLevel) url += '&level=' + this.filterLevel;
+                const res = await api(url);
+                if (res && res.ok) {
+                    const data = await res.json();
+                    this.logs = data.logs;
+                }
+            },
+            startStream() {
+                if (this.eventSource) this.eventSource.close();
+                this.eventSource = new EventSource(API + '/api/logs/stream?token=' + getToken());
+                this.eventSource.onmessage = (event) => {
+                    const entry = JSON.parse(event.data);
+                    // Duplikate vermeiden
+                    if (!this.logs.find(l => l.id === entry.id)) {
+                        this.logs.unshift(entry);
+                        if (this.logs.length > 200) this.logs.pop();
+                    }
+                };
+            }
+        };
+    }
+</script>
+</body>
+</html>
