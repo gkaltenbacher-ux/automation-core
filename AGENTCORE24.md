@@ -88,15 +88,15 @@ PHASE 1-7: GRUNDSYSTEM                   ✅ KOMPLETT
 ─────────────────────────────────────────────────
 Server: 178.104.122.219 | Live: https://agentcore24.com | v0.1
 
-PHASE 8: PLANUNGS-SYSTEM (vorher 11)      ← AKTUELL
+PHASE 8: PLANUNGS-SYSTEM (vorher 11)      ✅ KOMPLETT
 ─────────────────────────────────────────────────
 ✅ 8.1  system_memory.json ins Core-Repo    [x]
 ✅ 8.2  Repos öffentlich + Raw-URLs aktiv   [x]
 ✅ 8.3  Claude.ai Project "Planer" erstellt [x]
 ✅ 8.4  Custom Instructions eingefügt       [x]
-□ 8.5  Erster Test: Planer liest Dateien    [ ]
+✅ 8.5  Erster Test: Planer liest Dateien   [x]
 
-PHASE 9: EIGENER TEST (vorher 8)          Status
+PHASE 9: EIGENER TEST (vorher 8)          ← AKTUELL
 ─────────────────────────────────────────────────
 □ 9.1  Produkt-Repo erstellt                [ ]
 □ 9.2  client.json für eigenes Projekt      [ ]
@@ -408,4 +408,4 @@ Nach Projekt → system_memory.json automatisch aktualisieren + git push
 # SESSION-LOG
 
 - 2026-03-27 — Phase 1-7 komplett. Live auf https://agentcore24.com. v0.1 getaggt.
-- 2026-03-28 — Phase 8 (Planungs-System) gestartet. system_memory.json im Repo. Claude.ai Planer-Projekt erstellt + Custom Instructions eingefügt.
+- 2026-03-28 — Phase 8 (Planungs-System) komplett. Repos öffentlich, Raw-URLs statt Pages, Planer liest alle Dateien live.
