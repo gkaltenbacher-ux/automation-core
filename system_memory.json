@@ -1,25 +1,26 @@
 {
-  "version": "1.0",
+  "version": "1.1",
   "last_updated": "2026-03-28",
-  "description": "Das Gedächtnis des AgentCore24 Systems. Wird von Claude Code nach jedem Projekt aktualisiert. Wird vom Planer vor jeder Planung gelesen.",
+  "description": "Das Gedächtnis des AgentCore24 Systems. Wird automatisch aktualisiert von Claude Code und Planer.",
 
   "about_grischa": {
     "kommunikation": "Deutsch, informell, will keine technischen Details",
     "arbeitsweise": "Will Optionen sehen, entscheidet schnell, will nicht dreimal gefragt werden",
     "tools": "Nur Warp Terminal + Claude Code. Kein Cursor, kein VS Code.",
     "stärken": "Kunden-Kommunikation, strategisches Denken, schnelle Entscheidungen",
-    "schwächen": "Kann keinen Code lesen oder schreiben, braucht klare Schritt-für-Schritt Führung",
+    "schwächen": "Kann keinen Code lesen oder schreiben, braucht klare Führung",
     "präferenzen": {
       "angebote": "Kurz, maximal 1 Seite, Kosten prominent in CHF",
-      "planung": "Will 2-3 Optionen sehen, dann schnell entscheiden",
-      "übergabe": "Macht immer Screen-Share mit Kunde, nie nur per E-Mail",
-      "system": "Will so wenig Tools wie möglich, alles vereinfacht"
+      "planung": "Will 2-3 Optionen, dann schnell entscheiden",
+      "übergabe": "Immer Screen-Share, nie nur per E-Mail",
+      "system": "So wenig Tools wie möglich, alles vereinfacht, alles in einer Datei"
     },
     "gelernt": [
-      {"datum": "2026-03-27", "erkenntnis": "Will keine Cursor/VS Code Empfehlungen, nur Claude Code"},
-      {"datum": "2026-03-28", "erkenntnis": "Will dass alles automatisch aktualisiert wird ohne nachzufragen"},
-      {"datum": "2026-03-28", "erkenntnis": "Bevorzugt ein einziges Dokument statt viele separate Dateien"},
-      {"datum": "2026-03-28", "erkenntnis": "Denkt in Systemen und Skalierung, nicht in einzelnen Projekten"}
+      {"datum": "2026-03-27", "erkenntnis": "Will keine Cursor/VS Code Empfehlungen"},
+      {"datum": "2026-03-28", "erkenntnis": "Will automatische Updates ohne Nachfragen"},
+      {"datum": "2026-03-28", "erkenntnis": "Bevorzugt ein Dokument statt viele separate Dateien"},
+      {"datum": "2026-03-28", "erkenntnis": "Denkt in Systemen und Skalierung"},
+      {"datum": "2026-03-28", "erkenntnis": "Will dass KI Muster selbst erkennt statt manuelle Eingabe"}
     ]
   },
 
@@ -32,8 +33,8 @@
     "blocks": {},
     "deployment": {
       "coolify_probleme": [
-        {"problem": "SSL erneuert sich nicht", "lösung": "Regenerate Certificate in Coolify", "häufigkeit": "unbekannt"},
-        {"problem": "Container startet nicht nach Reboot", "lösung": "docker compose up -d", "häufigkeit": "unbekannt"}
+        {"problem": "SSL erneuert sich nicht", "lösung": "Regenerate Certificate in Coolify"},
+        {"problem": "Container startet nicht nach Reboot", "lösung": "docker compose up -d"}
       ]
     },
     "claude_code_regeln": [
@@ -51,7 +52,6 @@
   },
 
   "planer_optimierungen": {
-    "beschreibung": "Wie der Planer-Claude mit Grischa kommunizieren soll, basierend auf Erfahrung",
     "angebots_stil": "Kurz, Kosten zuerst, Business-Value betonen, kein Tech-Jargon",
     "bewährte_fragen": [
       "Was kostet euch das Problem pro Monat an Zeit?",
@@ -61,6 +61,7 @@
       "Zu viele technische Details im Angebot",
       "Mehr als 3 Optionen gleichzeitig",
       "Kosten in USD statt CHF"
-    ]
+    ],
+    "grischas_muster": []
   }
 }
