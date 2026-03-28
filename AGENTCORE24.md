@@ -88,41 +88,41 @@ PHASE 1-7: GRUNDSYSTEM                   ✅ KOMPLETT
 ─────────────────────────────────────────────────
 Server: 178.104.122.219 | Live: https://agentcore24.com | v0.1
 
-PHASE 8: EIGENER TEST                     Status
+PHASE 8: PLANUNGS-SYSTEM (vorher 11)      ← AKTUELL
 ─────────────────────────────────────────────────
-□ 8.1  Produkt-Repo erstellt                [ ]
-□ 8.2  client.json für eigenes Projekt      [ ]
-□ 8.3  Eigene Automation zusammengesteckt   [ ]
-□ 8.4  Lokal getestet                       [ ]
-□ 8.5  Deployed                             [ ]
-□ 8.6  VERBESSERUNGEN.md geschrieben        [ ]
-□ 8.7  Alle Fixes zurück ins Core/Blocks    [ ]
-□ 8.8  v0.2 getaggt                         [ ]
+✅ 8.1  system_memory.json ins Core-Repo    [x]
+□ 8.2  GitHub Pages aktivieren (beide Repos)[ ]
+✅ 8.3  Claude.ai Project "Planer" erstellt [x]
+✅ 8.4  Custom Instructions eingefügt       [x]
+□ 8.5  Erster Test: Planer liest Dateien    [ ]
 
-PHASE 9: ERSTES KUNDEN-PRODUKT            Status
+PHASE 9: EIGENER TEST (vorher 8)          Status
 ─────────────────────────────────────────────────
-□ 9.1  Produkt-Repo                         [ ]
-□ 9.2  Alle Automationen als Blocks         [ ]
-□ 9.3  client.json Template                 [ ]
+□ 9.1  Produkt-Repo erstellt                [ ]
+□ 9.2  client.json für eigenes Projekt      [ ]
+□ 9.3  Eigene Automation zusammengesteckt   [ ]
 □ 9.4  Lokal getestet                       [ ]
-□ 9.5  Erster Kunde: Repo + Deploy          [ ]
-□ 9.6  Erster Kunde: Onboarding             [ ]
+□ 9.5  Deployed                             [ ]
+□ 9.6  VERBESSERUNGEN.md geschrieben        [ ]
+□ 9.7  Alle Fixes zurück ins Core/Blocks    [ ]
+□ 9.8  v0.2 getaggt                         [ ]
 
-PHASE 10: STABILISIERUNG                  Status
+PHASE 10: ERSTES KUNDEN-PRODUKT           Status
 ─────────────────────────────────────────────────
-□ 10.1 Kunden-Feedback einarbeiten          [ ]
-□ 10.2 Kosten-Tracking Modul               [ ]
-□ 10.3 Update-Skript (update_all.sh)        [ ]
-□ 10.4 Kunden-Anleitung + Checklisten       [ ]
-□ 10.5 v1.0 getaggt                         [ ]
+□ 10.1 Produkt-Repo                         [ ]
+□ 10.2 Alle Automationen als Blocks         [ ]
+□ 10.3 client.json Template                 [ ]
+□ 10.4 Lokal getestet                       [ ]
+□ 10.5 Erster Kunde: Repo + Deploy          [ ]
+□ 10.6 Erster Kunde: Onboarding             [ ]
 
-PHASE 11: PLANUNGS-SYSTEM                 Status
+PHASE 11: STABILISIERUNG                  Status
 ─────────────────────────────────────────────────
-□ 11.1 system_memory.json ins Core-Repo     [ ]
-□ 11.2 GitHub Pages aktivieren (beide Repos)[ ]
-□ 11.3 Claude.ai Project "Planer" erstellen [ ]
-□ 11.4 Custom Instructions einfügen         [ ]
-□ 11.5 Erster Test: Planer liest Dateien    [ ]
+□ 11.1 Kunden-Feedback einarbeiten          [ ]
+□ 11.2 Kosten-Tracking Modul               [ ]
+□ 11.3 Update-Skript (update_all.sh)        [ ]
+□ 11.4 Kunden-Anleitung + Checklisten       [ ]
+□ 11.5 v1.0 getaggt                         [ ]
 ```
 
 ---
@@ -408,3 +408,4 @@ Nach Projekt → system_memory.json automatisch aktualisieren + git push
 # SESSION-LOG
 
 - 2026-03-27 — Phase 1-7 komplett. Live auf https://agentcore24.com. v0.1 getaggt.
+- 2026-03-28 — Phase 8 (Planungs-System) gestartet. system_memory.json im Repo. Claude.ai Planer-Projekt erstellt + Custom Instructions eingefügt.
