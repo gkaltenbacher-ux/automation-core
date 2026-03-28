@@ -91,7 +91,7 @@ Server: 178.104.122.219 | Live: https://agentcore24.com | v0.1
 PHASE 8: PLANUNGS-SYSTEM (vorher 11)      ← AKTUELL
 ─────────────────────────────────────────────────
 ✅ 8.1  system_memory.json ins Core-Repo    [x]
-□ 8.2  GitHub Pages aktivieren (beide Repos)[ ]
+✅ 8.2  Repos öffentlich + Raw-URLs aktiv   [x]
 ✅ 8.3  Claude.ai Project "Planer" erstellt [x]
 ✅ 8.4  Custom Instructions eingefügt       [x]
 □ 8.5  Erster Test: Planer liest Dateien    [ ]
@@ -289,10 +289,10 @@ Grischa ist kein Entwickler. Erkläre alles in normaler Sprache.
 ## Vor jeder Antwort lesen (PFLICHT)
 
 Lies diese Dateien via web_fetch:
-1. https://gkaltenbacher-ux.github.io/automation-core/system_memory.json
-2. https://gkaltenbacher-ux.github.io/automation-blocks/blocks_library.json
-3. https://gkaltenbacher-ux.github.io/automation-blocks/agents_library.json
-4. https://gkaltenbacher-ux.github.io/automation-core/AGENTCORE24.md
+1. https://raw.githubusercontent.com/gkaltenbacher-ux/automation-core/main/system_memory.json
+2. https://raw.githubusercontent.com/gkaltenbacher-ux/automation-blocks/main/blocks_library.json
+3. https://raw.githubusercontent.com/gkaltenbacher-ux/automation-blocks/main/agents_library.json
+4. https://raw.githubusercontent.com/gkaltenbacher-ux/automation-core/main/AGENTCORE24.md
 
 Sage kurz: "[System gelesen: X Blocks, Y Patterns. Memory: Z Kunden-Erfahrungen.]"
 
