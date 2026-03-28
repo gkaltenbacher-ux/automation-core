@@ -1,0 +1,66 @@
+{
+  "version": "1.0",
+  "last_updated": "2026-03-28",
+  "description": "Das Gedächtnis des AgentCore24 Systems. Wird von Claude Code nach jedem Projekt aktualisiert. Wird vom Planer vor jeder Planung gelesen.",
+
+  "about_grischa": {
+    "kommunikation": "Deutsch, informell, will keine technischen Details",
+    "arbeitsweise": "Will Optionen sehen, entscheidet schnell, will nicht dreimal gefragt werden",
+    "tools": "Nur Warp Terminal + Claude Code. Kein Cursor, kein VS Code.",
+    "stärken": "Kunden-Kommunikation, strategisches Denken, schnelle Entscheidungen",
+    "schwächen": "Kann keinen Code lesen oder schreiben, braucht klare Schritt-für-Schritt Führung",
+    "präferenzen": {
+      "angebote": "Kurz, maximal 1 Seite, Kosten prominent in CHF",
+      "planung": "Will 2-3 Optionen sehen, dann schnell entscheiden",
+      "übergabe": "Macht immer Screen-Share mit Kunde, nie nur per E-Mail",
+      "system": "Will so wenig Tools wie möglich, alles vereinfacht"
+    },
+    "gelernt": [
+      {"datum": "2026-03-27", "erkenntnis": "Will keine Cursor/VS Code Empfehlungen, nur Claude Code"},
+      {"datum": "2026-03-28", "erkenntnis": "Will dass alles automatisch aktualisiert wird ohne nachzufragen"},
+      {"datum": "2026-03-28", "erkenntnis": "Bevorzugt ein einziges Dokument statt viele separate Dateien"},
+      {"datum": "2026-03-28", "erkenntnis": "Denkt in Systemen und Skalierung, nicht in einzelnen Projekten"}
+    ]
+  },
+
+  "kunden_erfahrungen": {
+    "branchen": {},
+    "allgemeine_learnings": []
+  },
+
+  "system_learnings": {
+    "blocks": {},
+    "deployment": {
+      "coolify_probleme": [
+        {"problem": "SSL erneuert sich nicht", "lösung": "Regenerate Certificate in Coolify", "häufigkeit": "unbekannt"},
+        {"problem": "Container startet nicht nach Reboot", "lösung": "docker compose up -d", "häufigkeit": "unbekannt"}
+      ]
+    },
+    "claude_code_regeln": [
+      "Negative Regeln funktionieren besser als positive (NICHT statt VERWENDE)",
+      "CLAUDE.md über 100 Zeilen → Claude Code ignoriert Regeln",
+      "Nach jedem 5. Prompt: /compact ausführen"
+    ]
+  },
+
+  "markt_trends": {
+    "last_scan": "2026-03-28",
+    "neue_tools": [],
+    "preisänderungen": [],
+    "wettbewerber": []
+  },
+
+  "planer_optimierungen": {
+    "beschreibung": "Wie der Planer-Claude mit Grischa kommunizieren soll, basierend auf Erfahrung",
+    "angebots_stil": "Kurz, Kosten zuerst, Business-Value betonen, kein Tech-Jargon",
+    "bewährte_fragen": [
+      "Was kostet euch das Problem pro Monat an Zeit?",
+      "Welche Tools nutzt ihr schon?"
+    ],
+    "vermeiden": [
+      "Zu viele technische Details im Angebot",
+      "Mehr als 3 Optionen gleichzeitig",
+      "Kosten in USD statt CHF"
+    ]
+  }
+}
