@@ -1,61 +1,58 @@
 # AGENTCORE24 — Das komplette System in einer Datei
-# Version 7.0 — Selbstlernendes Zwei-Gehirne-System
+# Version 8.0 — Ein-Gehirn-System mit Sub-Agents
 # Stand: März 2026
 
 ---
 
-# TEIL A: FÜR CLAUDE CODE UND PLANER
+# TEIL A: FÜR CLAUDE CODE
 
 ## Über Grischa
-
-Lies IMMER zuerst `system_memory.json` für aktuelle Infos über Grischas Arbeitsweise.
-Falls nicht erreichbar, gelten diese Grundregeln:
 
 - Grischa ist KEIN Entwickler. Er kann keinen Code lesen oder schreiben.
 - Erkläre jeden Schritt so dass ein Nicht-Techniker ihn versteht.
 - Mache technische Schritte selbst, frage nicht ob er sie manuell machen will.
 - Grischa arbeitet mit Warp als Terminal.
 - Deutsch, informell. Wenn er sagt "mach das" — mach es, frage nicht dreimal.
+- Lies IMMER zuerst `system_memory.json` für aktuelle Infos.
 
-## Rollen
+## Arbeitsablauf: NUR Claude Code
 
-- **Planer (Claude.ai Project):** Plant Automationen, erstellt Angebote und Baupläne, generiert Claude Code Prompts.
-- **Umsetzer (Claude Code in Warp):** Baut, testet, deployt, aktualisiert System-Dateien.
-- **Grischa:** Beschreibt was er will, prüft im Browser, gibt Feedback.
+Es gibt keinen separaten Planer mehr. Claude Code macht ALLES:
 
-## Regeln für Claude Code
+```
+GRISCHA → Claude Code → Plant → Fragt nach → Baut → Testet → Deployt → Lernt
+```
+
+### Planmodus (wenn Grischa "Neuer Kunde" oder ein neues Feature beschreibt)
+
+1. **Zuhören** — Grischa beschreibt was er/der Kunde will
+2. **Rückfragen stellen** — ALLE relevanten Fragen auf einmal:
+   - Was genau soll automatisiert werden?
+   - Welche Tools/APIs nutzt der Kunde schon?
+   - Welche Daten müssen wohin fliessen?
+   - Was sind die Trigger (Zeit, Event, manuell)?
+   - Welche Agents/Tools existieren schon die wiederverwendbar sind?
+   - Budget/Prioritäten?
+3. **Recherchieren** — Vor dem Bauen:
+   - Welche APIs gibt es? Was kosten sie?
+   - Welche Blocks/Tools/Agents existieren schon?
+   - Was ist der effizienteste/günstigste Weg?
+   - Sicherheits-Aspekte?
+4. **Plan präsentieren** — Architektur, Agents, Tools, Kosten
+5. **Grischa sagt "Go"** — Erst dann bauen
+6. **Bauen** — Schritt für Schritt, mit Tests nach jedem Schritt
+7. **Deployen** — Docker, Coolify, Domain
+8. **System-Memory aktualisieren** — Learnings, neue Blocks, neue Patterns
+
+### Regeln für Claude Code
 
 - Erkläre jeden Schritt bevor du ihn ausführst
-- Teste nach jedem Build-Schritt automatisch
-- Mache nie mehr als einen Schritt auf einmal ohne Bestätigung
-- Schreibe Log-Nachrichten und Dashboard-Texte auf Deutsch
-- Wenn Grischa fragt "wo stehen wir?" → Fortschritts-Tracker lesen
-
-## Automatisches Lernen (nach JEDEM Schritt, ohne zu fragen)
-
-### Was du AUTOMATISCH aktualisierst (kein Nachfragen):
-
-**AGENTCORE24.md:**
-- Fortschritts-Tracker: Schritt abhaken, Infos notieren
-- SESSION-LOG: Was geschafft wurde
-
-**system_memory.json:**
-- `about_grischa.gelernt` → Muster in seiner Arbeitsweise die du erkennst
-- `system_learnings.blocks` → Block-Probleme + wie gefixt
-- `system_learnings.claude_code_regeln` → Neue Best-Practices
-- `system_learnings.deployment` → Coolify/Docker Probleme + Lösungen
-- `kunden_erfahrungen` → Setup-Dauer, Blocks, Patterns, Pricing
-- `planer_optimierungen` → Was im Planungsprozess gut funktioniert hat
-
-**blocks_library.json:** Bei neuem Block → neuer Eintrag + statistics updaten
-**agents_library.json:** Bei neuem Pattern → neuer Eintrag
-
-### EINE Frage an Grischa (nur nach Kunden-Projekten):
-
-"Projekt fertig. Ich habe [X] Learnings automatisch gespeichert.
-Kurze Frage: War der Kunde zufrieden und gibt es was das ich nicht sehen konnte?"
-
-### git commit + push nach jedem Update.
+- Teste nach jedem Build-Schritt
+- Nie mehr als einen Schritt ohne Bestätigung
+- Log-Nachrichten und Dashboard-Texte auf Deutsch
+- Nutze IMMER bestehende Tools/Agents wenn möglich
+- Neuer Code → blocks_library.json + agents_library.json updaten
+- Nach jedem Projekt → system_memory.json updaten + git push
 
 ---
 
@@ -63,350 +60,249 @@ Kurze Frage: War der Kunde zufrieden und gibt es was das ich nicht sehen konnte?
 
 ## In einem Satz
 
-Grischa baut mit Claude Code Automations-Systeme für Kunden. Jeder Kunde bekommt ein Dashboard. Die Automationen werden aus wiederverwendbaren Bausteinen zusammengesteckt. Das System lernt mit jedem Projekt dazu.
+Grischa baut mit Claude Code Agent-Systeme für Kunden. Jeder Kunde bekommt ein Dashboard + Sub-Agents die seine Arbeitsprozesse automatisieren. Das System lernt mit jedem Projekt dazu.
 
 ## Kern-Prinzipien
 
-**1. Zwei Gehirne, ein System** — Planer plant, Claude Code baut. Beide lesen system_memory.json. Was einer lernt, weiss der andere sofort.
+**1. Ein Gehirn** — Claude Code plant UND baut. Kein separater Planer.
 
-**2. Drei Schichten** — Core (alle Kunden gleich) → Blocks (wiederverwendbar) → Config (kunden-spezifisch).
+**2. Vier Schichten** — Core (alle Kunden gleich) → Agents (wiederverwendbar) → Tools (wiederverwendbar) → Config (kunden-spezifisch).
 
-**3. Konfiguration statt Code** — client.json steuert alles. Neue Kunden = konfigurieren, nicht programmieren.
+**3. Agents + Tools statt Pipelines** — Orchestrator-Agent steuert Sub-Agents. Sub-Agents nutzen Tools. Flexibler als starre Block-Ketten.
 
-**4. Dashboard bleibt HTML** — Eine Datei, Tailwind + Alpine.js via CDN. Kein React. Nie.
+**4. Konfiguration statt Code** — client.json steuert alles. Welche Agents aktiv sind, welche Tools sie nutzen, wann sie laufen.
 
-**5. BYOK** — Kunde zahlt seine API-Kosten selbst.
+**5. Dashboard = Basis + Flexibel** — Jedes Projekt hat das gleiche Dashboard-Framework (Login, Tabs, Credentials, Logs) aber projekt-spezifische Tabs werden hinzugefügt.
 
-**6. Das System lernt** — system_memory.json wird automatisch aktualisiert. Jedes Projekt macht das System besser.
+**6. BYOK** — Kunde zahlt seine API-Kosten selbst.
+
+**7. Das System lernt** — system_memory.json wird automatisch aktualisiert. Jedes Projekt macht das System besser.
 
 ---
 
-# TEIL C: FORTSCHRITTS-TRACKER
+# TEIL C: ARCHITEKTUR
+
+## Vier Code-Schichten
+
+```
+automation-core/ (GitHub Repo)
+├── AGENTCORE24.md              ← Dieses Dokument
+├── system_memory.json          ← Das lernende Gedächtnis
+├── CLAUDE.md                   ← Regeln für Claude Code
+└── core/                       ← Backend-Code (FastAPI, DB, Scheduler, Dashboard-Basis)
+
+automation-blocks/ (GitHub Repo)
+├── blocks_library.json         ← Block-Katalog (Legacy + neue Tools)
+├── agents_library.json         ← Agent/Pattern-Katalog
+└── blocks/                     ← Block-Code (Legacy-Interface)
+
+Kunden-Projekte (je ein Repo)
+├── core/                       ← Git Subtree aus automation-core
+├── blocks/                     ← Git Subtree aus automation-blocks
+├── agents/                     ← SUB-AGENTS (pro Projekt konfigurierbar)
+│   ├── __init__.py             ← Agent-Registry
+│   ├── base_agent.py           ← Basis-Klasse
+│   ├── lead_researcher.py      ← Beispiel: Lead-Agent
+│   └── outreach_agent.py       ← Beispiel: Outreach-Agent
+├── tools/                      ← TOOLS (wiederverwendbar, Agents nutzen sie)
+│   ├── __init__.py             ← Tool-Registry
+│   ├── scrape_google_maps.py   ← Beispiel
+│   └── send_gmail.py           ← Beispiel
+├── config/
+│   ├── client.json             ← Steuert Agents, Tools, Automationen
+│   └── custom_prompts/         ← Kunden-Prompts
+├── CLAUDE.md                   ← Projekt-Regeln
+├── Dockerfile
+└── docker-compose.yml
+```
+
+## Agent-Architektur
+
+```
+┌──────────────────────────────────────────────────┐
+│  ORCHESTRATOR (core/backend/orchestrator.py)     │
+│  Empfängt Befehle via:                           │
+│  ├── Telegram Bot                                │
+│  ├── Dashboard API                               │
+│  ├── Scheduled Automationen                      │
+│  └── Webhooks (Cal.com, Tally, etc.)             │
+│                                                  │
+│  Entscheidet: Welcher Sub-Agent? Welche Tools?   │
+└────────────────┬─────────────────────────────────┘
+                 │
+    ┌────────────┼────────────┐
+    ▼            ▼            ▼
+┌─────────┐ ┌─────────┐ ┌─────────┐
+│ Agent A │ │ Agent B │ │ Agent C │
+│         │ │         │ │         │
+│ Tools:  │ │ Tools:  │ │ Tools:  │
+│ - T1    │ │ - T2    │ │ - T1    │  ← Agents können
+│ - T3    │ │ - T4    │ │ - T5    │    gleiche Tools teilen
+└─────────┘ └─────────┘ └─────────┘
+```
+
+Wichtig:
+- Sub-Agents reden NICHT miteinander (Token sparen)
+- Orchestrator → Sub-Agent → Ergebnis → Orchestrator
+- Ein Sub-Agent kann in verschiedenen Projekten verschiedene Tools bekommen
+
+## Dashboard-Architektur (Basis + Flexibel)
+
+```
+DASHBOARD BASIS (jedes Projekt gleich):
+├── Login (Passwort, Rate-Limiting)
+├── Tab: Credentials (API-Keys, Bot-Tokens, Webhooks)
+├── Tab: Automationen (Status, Toggle, Manual Trigger)
+├── Tab: Aktivität/Logs (Live-Stream, Filter)
+└── Tab-Framework (neue Tabs einfach hinzufügbar)
+
+DASHBOARD PROJEKT-SPEZIFISCH (je nach Kunde):
+├── Tab: Lead-Scraping Konfigurator (Lead-System)
+├── Tab: Prompt-Editor (Lead-System)
+├── Tab: Webhook-Config (Lead-System)
+├── Tab: [Kunde X spezifisch] (anderes Projekt)
+└── Tab: [Kunde Y spezifisch] (anderes Projekt)
+```
+
+---
+
+# TEIL D: FORTSCHRITTS-TRACKER
 
 ```
 PHASE 1-7: GRUNDSYSTEM                   ✅ KOMPLETT
 ─────────────────────────────────────────────────
 Server: 178.104.122.219 | Live: https://agentcore24.com | v0.1
 
-PHASE 8: PLANUNGS-SYSTEM (vorher 11)      ✅ KOMPLETT
+PHASE 8: PLANUNGS-SYSTEM                  ✅ KOMPLETT
 ─────────────────────────────────────────────────
-✅ 8.1  system_memory.json ins Core-Repo    [x]
-✅ 8.2  Repos öffentlich + Raw-URLs aktiv   [x]
-✅ 8.3  Claude.ai Project "Planer" erstellt [x]
-✅ 8.4  Custom Instructions eingefügt       [x]
-✅ 8.5  Erster Test: Planer liest Dateien   [x]
+Repos öffentlich, Raw-URLs, Planer liest Dateien live.
 
-PHASE 9: EIGENER TEST (vorher 8)          ← AKTUELL
+PHASE 9A: EIGENER TEST (Lead-System)      ✅ KOMPLETT
 ─────────────────────────────────────────────────
-✅ 9.1  Produkt-Repo erstellt                [x] kunde-grischa-leadsystem
-✅ 9.2  client.json für eigenes Projekt      [x] 10 Blocks, 3 Automationen, 2 Webhooks
-✅ 9.3  Eigene Automation zusammengesteckt   [x] 9 neue Blocks + 5 Prompt-Templates
-✅ 9.4  Dashboard komplett                   [x] 6 Tabs, 25 API-Endpoints
-□ 9.5  Deployed (Coolify)                   [ ] leadsystem.agentcore24.com
-□ 9.6  Live-Test (Keys, Scraping, E-Mail)   [ ]
-□ 9.7  Alle Fixes zurück ins Core/Blocks    [ ]
-□ 9.8  v0.2 getaggt                         [ ]
+✅ 9A.1  Produkt-Repo (kunde-grischa-leadsystem)
+✅ 9A.2  client.json (10 Blocks, 3 Automationen, 2 Webhooks)
+✅ 9A.3  9 neue Blocks + 5 Prompt-Templates
+✅ 9A.4  Dashboard (6 Tabs, 25+ API-Endpoints)
+✅ 9A.5  Deployed (leadsystem.agentcore24.com)
+✅ 9A.6  Telegram Bot + Credential System + Orchestrator
+✅ 9A.7  Apify Scraper mit korrekten Actor-IDs + Dashboard-Konfigurator
 
-PHASE 10: ERSTES KUNDEN-PRODUKT           Status
+PHASE 9B: SYSTEM-UMBAU                   ← AKTUELL
 ─────────────────────────────────────────────────
-□ 10.1 Produkt-Repo                         [ ]
-□ 10.2 Alle Automationen als Blocks         [ ]
-□ 10.3 client.json Template                 [ ]
-□ 10.4 Lokal getestet                       [ ]
-□ 10.5 Erster Kunde: Repo + Deploy          [ ]
-□ 10.6 Erster Kunde: Onboarding             [ ]
+✅ 9B.1  AGENTCORE24.md umgeschrieben (Ein-Gehirn-System)
+✅ 9B.2  agents/ + tools/ Verzeichnisse erstellt
+✅ 9B.3  BaseAgent + Tool-Registry
+□ 9B.4  system_memory.json umstrukturieren
+□ 9B.5  CLAUDE.md Template für Agent-Projekte
+
+PHASE 9C: AGENT-FRAMEWORK                Status
+─────────────────────────────────────────────────
+□ 9C.1  Orchestrator-Agent neu (zentrale Steuerung)
+□ 9C.2  Bestehende Blocks → Tools migrieren
+□ 9C.3  Erste Sub-Agents bauen (Lead-Researcher, Outreach)
+□ 9C.4  Agent ↔ Tool Zuordnung via client.json
+□ 9C.5  Lern-System (Agents verbessern sich)
+
+PHASE 9D: CLAUDE CODE WORKFLOW            Status
+─────────────────────────────────────────────────
+□ 9D.1  "Neuer Kunde" Workflow testen
+□ 9D.2  Recherche-Phase einbauen
+□ 9D.3  Automatische Stack-Erweiterung
+□ 9D.4  Dashboard-Basis als wiederverwendbares Template
+□ 9D.5  v0.2 taggen
+
+PHASE 10: ERSTES KUNDEN-PRODUKT          Status
+─────────────────────────────────────────────────
+□ 10.1 Kunden-Repo mit Agent-Architektur
+□ 10.2 Agents + Tools für Kundenfall
+□ 10.3 Dashboard (Basis + Kunden-Tabs)
+□ 10.4 Getestet + deployed
+□ 10.5 System-Memory aktualisiert
 
 PHASE 11: STABILISIERUNG                  Status
 ─────────────────────────────────────────────────
-□ 11.1 Kunden-Feedback einarbeiten          [ ]
-□ 11.2 Kosten-Tracking Modul               [ ]
-□ 11.3 Update-Skript (update_all.sh)        [ ]
-□ 11.4 Kunden-Anleitung + Checklisten       [ ]
-□ 11.5 v1.0 getaggt                         [ ]
+□ 11.1 Kunden-Feedback einarbeiten
+□ 11.2 Kosten-Tracking Modul
+□ 11.3 Update-Skript (update_all.sh)
+□ 11.4 Kunden-Anleitung + Checklisten
+□ 11.5 v1.0 getaggt
 ```
 
 ---
 
-# TEIL D: ARCHITEKTUR
-
-## Zwei-Gehirne-System
+# TEIL E: KUNDEN-ABLAUF (Neu: Nur Claude Code)
 
 ```
-┌──────────────────────────────────────────────────┐
-│  PLANER (Claude.ai Project)                      │
-│  Liest live via GitHub Pages:                    │
-│  ├── AGENTCORE24.md         ← Dieses Dokument   │
-│  ├── system_memory.json     ← Gelerntes          │
-│  ├── blocks_library.json    ← Bausteine          │
-│  └── agents_library.json    ← Patterns           │
-│                                                  │
-│  Ergebnis: Angebote + Claude Code Prompts        │
-│  Lernt automatisch: Grischas Muster,             │
-│  bewährte Fragen, Angebots-Stil                  │
-└────────────────┬─────────────────────────────────┘
-                 │ Copy-Paste Prompts
-                 ▼
-┌──────────────────────────────────────────────────┐
-│  UMSETZER (Claude Code in Warp)                  │
-│  Liest lokal: AGENTCORE24.md, CLAUDE.md,         │
-│  system_memory.json                              │
-│                                                  │
-│  Schreibt zurück (git push):                     │
-│  ├── system_memory.json     ← Learnings          │
-│  ├── blocks_library.json    ← Neue Blocks        │
-│  ├── agents_library.json    ← Neue Patterns      │
-│  └── AGENTCORE24.md         ← Fortschritt        │
-│                                                  │
-│  Lernt automatisch: Block-Probleme,              │
-│  Deployment-Issues, Code-Regeln                  │
-└────────────────┬─────────────────────────────────┘
-                 │ git push
-                 ▼
-        GitHub Pages (auto-sync, 1-2 Min)
-                 │
-                 ▼
-        Planer liest beim nächsten Chat
-        die neuesten Daten
+A: ERSTGESPRÄCH  → Call mit Kunde, Transkript erstellen
+B: PLANEN        → Claude Code: Rückfragen → Plan → "Go"
+C: RECHERCHE     → Claude Code: APIs, Kosten, bestehende Tools prüfen
+D: BAUEN         → Claude Code: Agents + Tools + Dashboard + Tests
+E: DEPLOYEN      → Claude Code: Docker, Coolify, Domain, SSL
+F: ÜBERGABE      → Screen-Share, Kunde trägt Keys ein
+G: BETRIEB       → Monitoring, Telegram-Bot für Steuerung
+H: LERNEN        → system_memory.json automatisch aktualisiert
 ```
 
-## Drei Code-Schichten
+## Phase B im Detail (Planmodus in Claude Code)
 
-```
-automation-core/ (GitHub Repo + Pages)
-├── AGENTCORE24.md              ← Dieses Dokument (alles in einem)
-├── system_memory.json          ← Das lernende Gedächtnis
-├── CLAUDE.md                   ← Regeln für Claude Code
-└── core/                       ← Backend-Code
+Grischa sagt: "Neuer Kunde: [Name], [Branche], [Infos aus Call]"
 
-automation-blocks/ (GitHub Repo + Pages)
-├── blocks_library.json         ← Block-Katalog
-├── agents_library.json         ← Pattern-Katalog
-└── blocks/                     ← Block-Code
-
-Kunden-Projekte (je ein Repo)
-├── core/                       ← Git Subtree aus automation-core
-├── blocks/                     ← Git Subtree aus automation-blocks
-├── config/client.json          ← Steuert Automationen
-├── config/custom_prompts/      ← Kunden-Prompts
-├── CLAUDE.md                   ← Projekt-Regeln
-└── .env                        ← Keys, Passwörter
-```
+Claude Code:
+1. Liest system_memory.json (ähnliche Projekte? Bewährte Patterns?)
+2. Stellt ALLE Rückfragen auf einmal:
+   - Welche Prozesse sollen automatisiert werden?
+   - Welche Tools/Software nutzt der Kunde?
+   - Welche Datenquellen gibt es?
+   - Was sind die Trigger (Zeit? Event? Manuell?)
+   - Budget-Rahmen?
+   - Gibt es besondere Anforderungen (Sicherheit, Datenschutz)?
+3. Grischa antwortet
+4. Claude Code erstellt Plan:
+   - Welche Agents werden gebraucht?
+   - Welche Tools pro Agent?
+   - Welche bestehenden Tools können wiederverwendet werden?
+   - Was muss neu gebaut werden?
+   - Geschätzte Kosten (API + Setup)
+   - Architektur-Diagramm
+5. Grischa sagt "Go" → Claude Code baut
 
 ---
 
-# TEIL E: KUNDEN-ABLAUF (Phase A bis H)
+# TEIL F: STACK
 
-## Übersicht
+## Technologie (NUR diese)
 
-```
-A: VERSTEHEN  → Erstgespräch, Schmerzpunkte notieren
-B: PLANEN     → Im Planer (Claude.ai), Angebot + Bauplan erstellen
-C: INFRA      → Server/Coolify einrichten (Claude Code)
-D: ENTDECKEN  → CRM-Felder auslesen mit temporärem Kunden-Key
-E: BAUEN      → Claude Code Prompts vom Planer reinkopieren
-F: ÜBERGABE   → Screen-Share, Kunde erstellt NEUE Keys
-G: BETRIEB    → Monitoring, Support bei Problemen
-H: LERNEN     → system_memory.json wird automatisch aktualisiert
-```
-
-## Phase A: Verstehen (30-60 Min, Gespräch)
-
-Du fragst: Zeitfresser? Tools? Teamgrösse? API-Erfahrung?
-Du notierst: Branche, Schmerzpunkte, Tools, technisches Level.
-
-## Phase B: Planen (30-60 Min, Planer in Claude.ai)
-
-```
-"Neuer Kunde: [NAME], [BRANCHE], [TEAM].
-Schmerzpunkte: [LISTE]
-Tools: [LISTE]"
-```
-
-Planer liest automatisch system_memory.json + Libraries.
-Erstellt Angebot → Kunde sagt ja → Planer erstellt Bauplan mit 4 Claude Code Prompts.
-
-## Phase C: Infrastruktur (30 Min, Claude Code)
-
-Server/App in Coolify, Domain, UptimeRobot.
-
-## Phase D: Entdecken (30-60 Min, Claude Code + Kunden-Keys)
-
-```
-DEINE KEYS: OpenAI, Anthropic, Slack (Test), Gmail (Test)
-VOM KUNDEN: Sein CRM, branchenspezifische Software
-```
-
-Sage Kunden: "Erstelle temporären Key. Nach Einrichtung löschst du ihn und erstellst einen neuen."
-
-Claude Code liest CRM-Struktur aus (NUR lesen). Erstellt Field-Mapping.
-
-## Phase E: Bauen + Testen (2-4 Std, Claude Code)
-
-4 Prompts vom Planer nacheinander reinkopieren.
-Testen mit eigenen Keys + Kunden-Keys.
-Danach: ALLE Keys entfernen.
-
-## Phase F: Übergabe (30-45 Min, Screen-Share)
-
-Kunde löscht alten Key → erstellt neuen → trägt im Dashboard ein → gemeinsam testen.
-
-## Phase G: Betrieb (15-30 Min/Monat)
-
-UptimeRobot prüfen. Bei Problemen: Claude Code debuggt und fixt.
-
-## Phase H: Lernen (automatisch)
-
-Claude Code aktualisiert system_memory.json automatisch mit allem was er erkennen kann.
-Stellt Grischa EINE kurze Frage: "War der Kunde zufrieden?"
-
-## Checkliste pro Kunde
-
-```
-□ A: Erstgespräch geführt, Infos notiert
-□ B: Planer hat Angebot + Bauplan erstellt, Kunde zugesagt
-□ C: Server/Coolify/Domain/Monitoring eingerichtet
-□ D: Kunden-Keys erhalten, CRM-Struktur ausgelesen, Mapping erstellt
-□ E: 4 Prompts in Claude Code, gebaut + getestet, alle Keys entfernt
-□ F: Übergabe-Call, Kunde hat neue Keys, alles läuft
-□ G: System läuft, Monitoring aktiv, Rechnung verschickt
-□ H: system_memory.json aktualisiert
-```
-
----
-
-# TEIL F: PLANUNGS-SYSTEM (Custom Instructions für Claude.ai Project)
-
-Diese Custom Instructions in das Claude.ai Project "AgentCore24 Planer" kopieren:
-
-```markdown
-# AgentCore24 Planer — System Instructions
-
-## Wer du bist
-Du bist Grischas technischer Planungs-Assistent für "AgentCore24".
-Du PLANST. Du baust NICHT. Claude Code baut.
-Grischa ist kein Entwickler. Erkläre alles in normaler Sprache.
-
-## Vor jeder Antwort lesen (PFLICHT)
-
-Lies diese Dateien via web_fetch:
-1. https://raw.githubusercontent.com/gkaltenbacher-ux/automation-core/main/system_memory.json
-2. https://raw.githubusercontent.com/gkaltenbacher-ux/automation-blocks/main/blocks_library.json
-3. https://raw.githubusercontent.com/gkaltenbacher-ux/automation-blocks/main/agents_library.json
-4. https://raw.githubusercontent.com/gkaltenbacher-ux/automation-core/main/AGENTCORE24.md
-
-Sage kurz: "[System gelesen: X Blocks, Y Patterns. Memory: Z Kunden-Erfahrungen.]"
-
-Nutze system_memory.json für:
-- about_grischa → Kommunikationsstil anpassen
-- kunden_erfahrungen → Bewährte Patterns vorschlagen, vor Problemen warnen
-- system_learnings → Optimierte Block-Configs empfehlen
-- planer_optimierungen → Angebots-Stil, bewährte Fragen
-
-## Automatisches Lernen im Planer
-Du erkennst selbst Muster:
-- Welche Option Grischa meistens wählt → beim nächsten Mal zuerst zeigen
-- Welche Rückfragen er immer gleich beantwortet → nicht mehr stellen
-- Wie er Angebote umformuliert → Format anpassen
-
-Am Ende jeder Planungs-Session: Füge im letzten Claude Code Prompt hinzu:
-"Aktualisiere system_memory.json: planer_optimierungen + about_grischa"
-
-## Modus A: Angebot erstellen
-Trigger: "Neuer Kunde" + Infos
-1. Dateien lesen, Branche in system_memory.json prüfen
-2. Rückfragen stellen (Schmerzpunkte, Tools, Ziel, Budget)
-3. 2-3 Optionen zeigen mit Vor-/Nachteilen
-4. Gemeinsam verfeinern bis Grischa sagt "passt"
-5. Angebot generieren (kurz, Kosten in CHF, kein Jargon)
-
-## Modus B: Bauplan erstellen
-Trigger: "Kunde hat zugesagt" + CRM-Infos
-1. client.json erstellen (gültiges JSON)
-2. Prompt-Dateien für Sub-Agents
-3. 4 Copy-Paste Prompts für Claude Code
-4. Test-Checkliste + Übergabe-Anleitung
-WICHTIG: Jeder Prompt muss eigenständig verständlich sein für Claude Code.
-
-## Modus C: Erweiterung planen
-Trigger: "Kunde X will noch Y"
-Prüfe Blocks + system_memory.json → Erweiterung oder neuer Block.
-
-## Modus D: System verbessern
-Trigger: "Was können wir verbessern?"
-Lies system_memory.json → Vorschläge für neue Blocks, Optimierungen, Pricing.
-
-## Regeln
-- Deutsch, informell mit Grischa. Professionell (Sie) in Kunden-Docs.
-- Kosten: CHF für Setup, EUR für API-Kosten
-- Günstigstes Modell zuerst (gpt-4o-mini vor gpt-4o)
-- Block "status: planned" → erwähne dass er erst gebaut werden muss
-```
-
----
-
-# TEIL G: CLAUDE.md TEMPLATE
-
-Wird in jedes Kunden-Projekt kopiert:
-
-```markdown
-# CLAUDE.md — Projekt-Regeln
-
-## Projekt
-Automations-Plattform für [KUNDENNAME].
-Core → Blocks → Config.
-
-## Stack (NUR diese — KEINE anderen)
-- Backend: FastAPI (Python 3.11+). NICHT Flask. NICHT Django.
-- Datenbank: SQLite mit Write-Queue. NICHT PostgreSQL. NICHT MongoDB.
-- Dashboard: EINE HTML-Datei, Tailwind + Alpine.js. NICHT React. KEIN Build-Step.
+- Backend: FastAPI (Python 3.11+). NICHT Flask/Django.
+- Datenbank: SQLite mit Write-Queue. NICHT PostgreSQL.
+- Dashboard: EINE HTML-Datei, Tailwind + Alpine.js. KEIN React. KEIN npm.
 - Scheduling: APScheduler. NICHT Celery.
 - Verschlüsselung: Fernet. Container: Docker Compose.
+- AI: OpenAI Function Calling. KEIN LangChain (zu schwer).
+- Telegram: python-telegram-bot (Webhook-Modus).
+- Scraping: Apify API (Actors als Service).
+- CRM: Notion API.
 
-## Regeln
-- core/ = ALLE Kunden gleich. NIEMALS kunden-spezifisches rein.
-- blocks/ = Wiederverwendbar. NIEMALS kunden-spezifisches rein.
-- config/ = Kunden-spezifisch. NIE durch Updates überschreiben.
-- Block-Interface: async def execute(input_data, config, context) -> dict
-- Logging: NORMALE SPRACHE, kein Tech-Jargon
-- API-Keys: IMMER via context["get_api_key"](), NIEMALS hardcoden
+## Kosten pro Kunde
 
-## System-Memory Pflege
-Bei neuem Block → blocks_library.json aktualisieren + git push
-Bei neuem Pattern → agents_library.json aktualisieren + git push
-Nach Projekt → system_memory.json automatisch aktualisieren + git push
-```
-
----
-
-# TEIL H: KOSTEN UND PRICING
-
-## Pro Kunde
 | Posten | Monatlich |
 |---|---|
 | Hetzner CX22 + Snapshots | ~€4.55 |
 | Coolify + SSL + UptimeRobot | €0 |
-| **Gesamt** | **~€5-6** |
+| **Gesamt Infrastruktur** | **~€5-6** |
 
-## Dein Pricing
+## Pricing
+
 | Leistung | Preis |
 |---|---|
 | Setup + Basis-Automationen | CHF 1'500-3'000 |
 | Monatliche Betreuung | CHF 200-500/Monat |
 | Erweiterungsmodul | CHF 500-2'000 |
-| Neue Automation | CHF 300-800 |
-
----
-
-# TEIL I: HILFE
-
-**Claude Code:** "Wo stehen wir?" oder "Ich stecke fest bei [X]."
-**Planer:** "Ich verstehe [X] nicht. Erkläre es mir einfach."
-**Beide:** "Lies system_memory.json — hatten wir das Problem schon?"
 
 ---
 
 # SESSION-LOG
 
 - 2026-03-27 — Phase 1-7 komplett. Live auf https://agentcore24.com. v0.1 getaggt.
-- 2026-03-28 — Phase 8 (Planungs-System) komplett. Repos öffentlich, Raw-URLs statt Pages, Planer liest alle Dateien live.
-- 2026-03-30 — Phase 9.1-9.4: Lead-System gebaut. 9 neue Blocks, Notion CRM, Dashboard (6 Tabs), Docker Multi-stage. 16 Blocks total in Library.
+- 2026-03-28 — Phase 8 komplett. Repos öffentlich, Planer liest Dateien live.
+- 2026-03-30 — Phase 9A komplett. Lead-System gebaut: 16 Blocks, 5 Patterns, 6 Dashboard-Tabs, Telegram Bot, Credential System. Live auf leadsystem.agentcore24.com.
+- 2026-03-30 — Phase 9B gestartet. System-Umbau: Ein-Gehirn (nur Claude Code), agents/ + tools/ Verzeichnisse, BaseAgent-Klasse, AGENTCORE24.md v8.0.
