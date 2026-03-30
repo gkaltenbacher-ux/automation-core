@@ -1,6 +1,6 @@
 {
-  "version": "1.1",
-  "last_updated": "2026-03-28",
+  "version": "2.0",
+  "last_updated": "2026-03-30",
   "description": "Das Gedächtnis des AgentCore24 Systems. Wird automatisch aktualisiert von Claude Code und Planer.",
 
   "about_grischa": {
@@ -20,27 +20,64 @@
       {"datum": "2026-03-28", "erkenntnis": "Will automatische Updates ohne Nachfragen"},
       {"datum": "2026-03-28", "erkenntnis": "Bevorzugt ein Dokument statt viele separate Dateien"},
       {"datum": "2026-03-28", "erkenntnis": "Denkt in Systemen und Skalierung"},
-      {"datum": "2026-03-28", "erkenntnis": "Will dass KI Muster selbst erkennt statt manuelle Eingabe"}
+      {"datum": "2026-03-28", "erkenntnis": "Will dass KI Muster selbst erkennt statt manuelle Eingabe"},
+      {"datum": "2026-03-30", "erkenntnis": "Gibt detaillierte Specs vor, lässt Claude Code selbständig bauen"},
+      {"datum": "2026-03-30", "erkenntnis": "Will alles über Dashboard steuern, keine .env-Dateien"}
     ]
   },
 
   "kunden_erfahrungen": {
-    "branchen": {},
-    "allgemeine_learnings": []
+    "branchen": {
+      "eigenes_lead_system": {
+        "projekt": "grischa_agentcore24",
+        "typ": "Lead-Generierung + Outreach",
+        "blocks_verwendet": ["apify_scraper", "lead_id_generator", "lead_scorer", "llm_prompt_executor", "notion_crm_sync", "gmail_sender", "email_responder", "calcom_webhook", "tally_webhook", "api_key_manager"],
+        "automationen": 3,
+        "setup_dauer": "~4 Stunden (mit Claude Code)",
+        "besonderheiten": [
+          "Lead-ID-System (AgentCore24-XXXX) für durchgängiges Tracking",
+          "Tally + Cal.com Webhooks für Lead-Qualifizierung",
+          "5 Prompt-Templates für personalisierte E-Mails",
+          "Dashboard mit 6 Tabs für komplette Steuerung",
+          "API-Keys verschlüsselt in SQLite statt .env"
+        ]
+      }
+    },
+    "allgemeine_learnings": [
+      "Lead-ID als zentraler Identifier funktioniert gut (Tracking über Tally + Cal.com Links)",
+      "Regel-basiertes Scoring reicht für den Start, LLM-Scoring als Upgrade möglich",
+      "Gmail App-Password ist einfacher als OAuth für kleine Setups",
+      "Notion als CRM funktioniert, Rate-Limit (3 req/sec) muss beachtet werden",
+      "Dashboard braucht mindestens: Scraping-Konfigurator, Prompt-Editor, Automation-Status, Key-Management, Webhook-Config"
+    ]
   },
 
   "system_learnings": {
-    "blocks": {},
+    "blocks": {
+      "apify_scraper": "Google Maps Actor: compass/crawler-google-places. E-Mail-Extraktion als separater Schritt (website-email-extractor). LinkedIn max 20 Leads wegen Rate-Limits.",
+      "notion_crm_sync": "Lead ID muss Title-Feld sein (nicht rich_text). Rate-Limit-Delay 0.35s. Batch-Size 10 ist optimal.",
+      "gmail_sender": "SMTP_SSL auf Port 465. 1 Sekunde Pause zwischen E-Mails. Betreff-Erkennung aus LLM-Output (Betreff:-Prefix).",
+      "api_key_manager": "Fernet-Encryption funktioniert gut. Encryption-Key auto-generiert beim ersten Start. chmod 600 für Key-File."
+    },
     "deployment": {
       "coolify_probleme": [
         {"problem": "SSL erneuert sich nicht", "lösung": "Regenerate Certificate in Coolify"},
-        {"problem": "Container startet nicht nach Reboot", "lösung": "docker compose up -d"}
+        {"problem": "Container startet nicht nach Reboot", "lösung": "docker compose up -d"},
+        {"problem": "Build dauert lang", "lösung": "Multi-stage Dockerfile nutzen"}
       ]
     },
     "claude_code_regeln": [
       "Negative Regeln funktionieren besser als positive (NICHT statt VERWENDE)",
       "CLAUDE.md über 100 Zeilen → Claude Code ignoriert Regeln",
-      "Nach jedem 5. Prompt: /compact ausführen"
+      "Nach jedem 5. Prompt: /compact ausführen",
+      "Grosse Dateien (Dashboard) besser komplett neu schreiben als viele kleine Edits",
+      "Blocks immer mit context['get_api_key'] statt direkte Imports"
+    ],
+    "dashboard": [
+      "EINE HTML-Datei mit Alpine.js funktioniert gut bis ~800 Zeilen",
+      "6 Tabs ist Maximum bevor Navigation zu eng wird",
+      "Monospace-Textarea reicht als Prompt-Editor (Monaco wäre Overkill)",
+      "Scraping als async Job mit Polling ist besser als blockierender Request"
     ]
   },
 
@@ -55,13 +92,23 @@
     "angebots_stil": "Kurz, Kosten zuerst, Business-Value betonen, kein Tech-Jargon",
     "bewährte_fragen": [
       "Was kostet euch das Problem pro Monat an Zeit?",
-      "Welche Tools nutzt ihr schon?"
+      "Welche Tools nutzt ihr schon?",
+      "Wie viele Leads generiert ihr aktuell pro Woche?"
     ],
     "vermeiden": [
       "Zu viele technische Details im Angebot",
       "Mehr als 3 Optionen gleichzeitig",
       "Kosten in USD statt CHF"
     ],
-    "grischas_muster": []
+    "bewährte_patterns": [
+      "Lead-Scraping → ID-Generator → Scorer → CRM → LLM-Personalisierung → E-Mail",
+      "Webhook → CRM-Update (für Tally/Cal.com)",
+      "E-Mail-Monitor → Quick-Win-Analyse → Follow-Up"
+    ],
+    "grischas_muster": [
+      "Gibt immer die komplette Spec auf einmal, nicht Schritt für Schritt",
+      "Will sofort die Notion-Felder definiert haben",
+      "Denkt von Anfang an an Tracking (Lead-IDs in allen Links)"
+    ]
   }
 }

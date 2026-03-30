@@ -98,12 +98,12 @@ PHASE 8: PLANUNGS-SYSTEM (vorher 11)      ✅ KOMPLETT
 
 PHASE 9: EIGENER TEST (vorher 8)          ← AKTUELL
 ─────────────────────────────────────────────────
-□ 9.1  Produkt-Repo erstellt                [ ]
-□ 9.2  client.json für eigenes Projekt      [ ]
-□ 9.3  Eigene Automation zusammengesteckt   [ ]
-□ 9.4  Lokal getestet                       [ ]
-□ 9.5  Deployed                             [ ]
-□ 9.6  VERBESSERUNGEN.md geschrieben        [ ]
+✅ 9.1  Produkt-Repo erstellt                [x] kunde-grischa-leadsystem
+✅ 9.2  client.json für eigenes Projekt      [x] 10 Blocks, 3 Automationen, 2 Webhooks
+✅ 9.3  Eigene Automation zusammengesteckt   [x] 9 neue Blocks + 5 Prompt-Templates
+✅ 9.4  Dashboard komplett                   [x] 6 Tabs, 25 API-Endpoints
+□ 9.5  Deployed (Coolify)                   [ ] leadsystem.agentcore24.com
+□ 9.6  Live-Test (Keys, Scraping, E-Mail)   [ ]
 □ 9.7  Alle Fixes zurück ins Core/Blocks    [ ]
 □ 9.8  v0.2 getaggt                         [ ]
 
@@ -409,3 +409,4 @@ Nach Projekt → system_memory.json automatisch aktualisieren + git push
 
 - 2026-03-27 — Phase 1-7 komplett. Live auf https://agentcore24.com. v0.1 getaggt.
 - 2026-03-28 — Phase 8 (Planungs-System) komplett. Repos öffentlich, Raw-URLs statt Pages, Planer liest alle Dateien live.
+- 2026-03-30 — Phase 9.1-9.4: Lead-System gebaut. 9 neue Blocks, Notion CRM, Dashboard (6 Tabs), Docker Multi-stage. 16 Blocks total in Library.
