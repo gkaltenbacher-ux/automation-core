@@ -1,148 +1,63 @@
 {
-  "version": "3.0",
-  "last_updated": "2026-03-30",
-  "description": "Das lernende Gedächtnis des AgentCore24 Systems. Wird automatisch von Claude Code aktualisiert.",
+  "version": "4.0",
+  "last_updated": "2026-03-31",
 
-  "about_grischa": {
-    "kommunikation": "Deutsch, informell, will keine technischen Details",
-    "arbeitsweise": "Gibt komplette Specs auf einmal, entscheidet schnell, will nicht dreimal gefragt werden",
-    "tools": "Nur Warp Terminal + Claude Code. Kein Cursor, kein VS Code, kein separater Planer.",
-    "stärken": "Kunden-Kommunikation, strategisches Denken, System-Denken, schnelle Entscheidungen",
-    "präferenzen": {
-      "angebote": "Kurz, maximal 1 Seite, Kosten prominent in CHF",
-      "planung": "Will 2-3 Optionen, dann schnell entscheiden",
-      "system": "Alles über Dashboard steuern, keine .env-Dateien, flexibel + skalierbar",
-      "architektur": "Sub-Agents + Tools in eigenen Ordnern, Orchestrator steuert alles"
-    },
-    "gelernt": [
-      {"datum": "2026-03-27", "erkenntnis": "Will keine Cursor/VS Code Empfehlungen"},
-      {"datum": "2026-03-28", "erkenntnis": "Bevorzugt ein Dokument statt viele separate Dateien"},
-      {"datum": "2026-03-28", "erkenntnis": "Denkt in Systemen und Skalierung"},
-      {"datum": "2026-03-30", "erkenntnis": "Will alles über Dashboard steuern, keine .env-Dateien"},
-      {"datum": "2026-03-30", "erkenntnis": "Will nur noch mit Claude Code arbeiten, kein separater Planer"},
-      {"datum": "2026-03-30", "erkenntnis": "agents/ und tools/ als separate Ordner für Flexibilität"},
-      {"datum": "2026-03-30", "erkenntnis": "Dashboard soll Basis haben die alle Projekte einheitlich macht + projekt-spezifische Tabs"}
-    ]
-  },
-
-  "claude_code_workflow": {
-    "description": "So arbeitet Grischa mit Claude Code (ersetzt den alten Planer)",
-    "ablauf": [
-      "1. Grischa beschreibt Kundenanforderung (Call-Transkript, Notizen)",
-      "2. Claude Code stellt ALLE Rückfragen auf einmal",
-      "3. Grischa antwortet",
-      "4. Claude Code recherchiert: APIs, Kosten, bestehende Tools",
-      "5. Claude Code präsentiert Plan mit Agents, Tools, Architektur",
-      "6. Grischa sagt 'Go'",
-      "7. Claude Code baut Schritt für Schritt mit Tests",
-      "8. Claude Code deployt (Docker, Coolify)",
-      "9. System-Memory wird automatisch aktualisiert"
-    ],
-    "regeln": [
-      "IMMER bestehende Tools/Agents wiederverwenden wenn möglich",
-      "VOR dem Bauen recherchieren (APIs, Kosten, Sicherheit)",
-      "Rückfragen gebündelt statt einzeln",
-      "Grischa muss 'Go' sagen bevor gebaut wird",
-      "Nach jedem Projekt: system_memory + libraries aktualisieren"
+  "system_status": {
+    "phase": "9D komplett — Lead-System umgebaut",
+    "next": "Bereit fuer naechsten Kunden oder Lead-System testen + deployen",
+    "core_features": [
+      "Credential-Management (config-getrieben, Fernet)",
+      "DSGVO-Modul (Consent, Export, Loeschung, Audit)",
+      "Orchestrator (dynamisch, OpenAI Function Calling)",
+      "Workflow-Engine (Sequential, Pause/Resume)",
+      "Cost-Tracking (pro Agent, pro Call)",
+      "Dashboard (7 Standard-Tabs)",
+      "Blueprint-System (Projekt-Vorlagen)",
+      "Telegram Bot (optional, config-getrieben)",
+      "Tool-Registry (Auto-Discovery)",
+      "Agent-Registry (Auto-Discovery)"
     ]
   },
 
   "agent_patterns": {
-    "description": "Bewährte Agent-Konfigurationen",
-    "patterns": {
-      "lead_researcher": {
-        "rolle": "Findet und qualifiziert Leads",
-        "tools": ["scrape_google_maps", "scrape_linkedin", "extract_emails", "score_leads", "generate_lead_id"],
-        "bewährt_in": ["grischa_agentcore24"],
-        "learnings": ["Google Maps + E-Mail-Extraktor als 2-Schritt-Prozess", "LinkedIn max 25 wegen Rate-Limits"]
-      },
-      "outreach_agent": {
-        "rolle": "Generiert und versendet personalisierte Nachrichten",
-        "tools": ["generate_text", "send_gmail", "sync_notion"],
-        "bewährt_in": ["grischa_agentcore24"],
-        "learnings": ["E-Mails NIE ohne explizite Bestätigung senden", "1 Sek Pause zwischen E-Mails"]
-      },
-      "crm_agent": {
-        "rolle": "Verwaltet CRM-Daten (Notion)",
-        "tools": ["sync_notion", "check_duplicate"],
-        "bewährt_in": ["grischa_agentcore24"],
-        "learnings": ["Rate-Limit 3 req/sec bei Notion", "Lead-ID muss Title-Feld sein"]
-      }
+    "lead_researcher": {
+      "tools": ["scrape_google_maps", "scrape_linkedin", "extract_emails", "score_leads", "generate_lead_id", "check_duplicate"],
+      "model": "gpt-4o-mini",
+      "bewaehrt_in": ["grischa_agentcore24"]
+    },
+    "outreach_agent": {
+      "tools": ["generate_text", "send_gmail"],
+      "model": "gpt-4o-mini",
+      "bewaehrt_in": ["grischa_agentcore24"],
+      "regel": "E-Mails NIE ohne explizite Bestaetigung senden"
+    },
+    "crm_agent": {
+      "tools": ["sync_notion", "check_duplicate"],
+      "model": "gpt-4o-mini",
+      "bewaehrt_in": ["grischa_agentcore24"]
     }
   },
 
-  "kunden_erfahrungen": {
-    "branchen": {
-      "eigenes_lead_system": {
-        "projekt": "grischa_agentcore24",
-        "typ": "Lead-Generierung + Outreach",
-        "agents": ["lead_researcher", "outreach_agent", "crm_agent"],
-        "tools_verwendet": ["scrape_google_maps", "scrape_linkedin", "extract_emails", "score_leads", "generate_lead_id", "generate_text", "send_gmail", "sync_notion", "calcom_webhook", "tally_webhook"],
-        "automationen": 3,
-        "setup_dauer": "~4 Stunden",
-        "besonderheiten": [
-          "Lead-ID-System (AgentCore24-XXXX) für durchgängiges Tracking",
-          "Tally + Cal.com Webhooks für Lead-Qualifizierung",
-          "5 Prompt-Templates für personalisierte E-Mails",
-          "Dashboard mit 7 Tabs",
-          "Telegram Bot für Remote-Steuerung"
-        ]
-      }
-    },
-    "allgemeine_learnings": [
-      "Lead-ID als zentraler Identifier funktioniert gut",
-      "Regel-basiertes Scoring reicht für den Start",
-      "Gmail App-Password einfacher als OAuth für kleine Setups",
-      "Notion als CRM funktioniert, Rate-Limit beachten",
-      "Dashboard braucht: Credentials, Automationen, Logs als Basis + projekt-spezifische Tabs"
-    ]
+  "tool_learnings": {
+    "scrape_google_maps": "Actor: compass~crawler-google-places. searchStringsArray + locationQuery.",
+    "scrape_linkedin": "Actor: harvestapi~linkedin-profile-search. Max 25 Leads realistisch.",
+    "extract_emails": "Actor: alex_claw~website-email-extractor. Feld heisst 'urls' NICHT 'startUrls'.",
+    "sync_notion": "Rate-Limit 0.35s Delay. Lead-ID muss Title-Feld sein. Batch-Size 10.",
+    "send_gmail": "SMTP_SSL Port 465. 1 Sek Pause zwischen E-Mails. App-Password statt OAuth."
   },
 
-  "system_learnings": {
-    "tools": {
-      "scrape_google_maps": "Actor: compass~crawler-google-places. searchStringsArray + locationQuery. website: withWebsite. scrapeContacts: true.",
-      "scrape_linkedin": "Actor: harvestapi~linkedin-profile-search. searchQuery + currentJobTitles + locations + companyHeadcount. Max 25 Leads.",
-      "extract_emails": "Actor: alex_claw~website-email-extractor. Feld heisst 'urls' NICHT 'startUrls'. extractPhones + extractSocials aktivieren.",
-      "sync_notion": "Lead ID = Title-Feld. Rate-Limit-Delay 0.35s. Batch-Size 10.",
-      "send_gmail": "SMTP_SSL Port 465. 1 Sek Pause. Betreff aus LLM-Output mit 'Betreff:' Prefix."
-    },
-    "deployment": {
-      "coolify": ["SSL: Regenerate Certificate", "Container Restart: docker compose up -d", "Multi-stage Dockerfile"],
-      "docker": ["PROMPTS_DIR: ../config (nicht ../../config)", "DATA_DIR als Environment Variable", "Health-Check: /health"]
-    },
-    "claude_code_regeln": [
-      "Negative Regeln besser als positive (NICHT statt VERWENDE)",
-      "CLAUDE.md unter 100 Zeilen halten",
-      "Grosse Dateien komplett neu schreiben statt viele kleine Edits",
-      "Monaco Editor NICHT in Alpine.js x-if Templates (Browser-Freeze)",
-      "Blocks/Tools: context['get_api_key'] statt direkte Imports"
-    ],
-    "dashboard": [
-      "EINE HTML mit Alpine.js funktioniert bis ~1000 Zeilen",
-      "Basis-Tabs (Credentials, Automationen, Logs) in jedes Projekt",
-      "Projekt-spezifische Tabs dazu",
-      "Textarea statt Monaco für Prompt-Editor (stabiler)"
-    ]
+  "deployment_learnings": {
+    "coolify": "SSL: Regenerate Certificate. Container Restart: docker compose up -d.",
+    "docker": "DATA_DIR als Environment Variable. Health-Check: /api/health.",
+    "dashboard": "EINE HTML mit Alpine.js. Textarea statt Monaco fuer Prompt-Editor."
   },
 
-  "research_findings": {
-    "description": "Recherche-Ergebnisse die für zukünftige Projekte relevant sind",
-    "apify_actors": {
-      "google_maps": "compass~crawler-google-places — zuverlässig, ~$2/1000 Results",
-      "email_extractor": "alex_claw~website-email-extractor — gut, braucht 'urls' Array",
-      "linkedin": "harvestapi~linkedin-profile-search — Full Profile Mode, max 25 sinnvoll"
-    },
-    "ai_modelle": {
-      "budget": "gpt-4o-mini — reicht für E-Mail-Generierung, Scoring, Analyse",
-      "quality": "gpt-4o — für komplexere Aufgaben",
-      "orchestrator": "gpt-4o-mini + Function Calling — leichter als LangChain"
+  "blueprints": {
+    "lead_generation": {
+      "agents": ["lead_researcher", "outreach_agent", "crm_agent"],
+      "credentials": ["openai_api", "apify_api", "notion_api", "gmail", "telegram_bot"],
+      "setup_dauer": "1-2 Stunden",
+      "monatliche_kosten": "CHF 20-50"
     }
-  },
-
-  "markt_trends": {
-    "last_scan": "2026-03-30",
-    "neue_tools": [],
-    "preisänderungen": [],
-    "wettbewerber": []
   }
 }

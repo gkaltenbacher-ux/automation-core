@@ -23,6 +23,13 @@ from backend.logger import log
 from backend import crypto
 from backend import rate_limiter
 from backend import pipeline
+from backend.credentials import create_credential_manager, create_get_api_key
+from backend.dsgvo import create_dsgvo_manager
+from backend.cost_tracker import CostTracker
+from backend.orchestrator import Orchestrator
+from tools import load_tool_registry
+from agents import load_agent_registry
+from backend.workflow_engine import WorkflowEngine
 
 
 # --- Session-Verwaltung ---
@@ -65,6 +72,48 @@ class HTTPSRedirectMiddleware(BaseHTTPMiddleware):
                 headers={"Location": str(url)},
             )
         return await call_next(request)
+
+
+# --- Credential Manager ---
+
+_client_config = pipeline.get_client_config()
+_data_dir = str(db._db_path).replace("database.db", "")
+credential_manager = create_credential_manager(_client_config, data_dir=_data_dir)
+get_api_key = create_get_api_key(credential_manager)
+dsgvo_manager = create_dsgvo_manager(_client_config, data_dir=_data_dir)
+cost_tracker = CostTracker(data_dir=_data_dir)
+
+# --- Tool + Agent Registry ---
+_tool_registry = load_tool_registry()
+_agent_context = {
+    "get_api_key": get_api_key,
+    "log": log,
+    "db": db,
+    "dsgvo": dsgvo_manager,
+    "cost_tracker": cost_tracker,
+}
+_agent_registry = load_agent_registry(
+    tool_registry=_tool_registry,
+    config=_client_config,
+    context=_agent_context,
+)
+
+# --- Orchestrator ---
+_orch_config = _client_config.get("orchestrator", {})
+orchestrator = Orchestrator(
+    credential_manager=credential_manager,
+    agent_registry=_agent_registry,
+    config=_orch_config,
+    cost_tracker=cost_tracker,
+) if _orch_config.get("enabled", False) else None
+
+# --- Workflow Engine ---
+workflow_engine = WorkflowEngine(
+    agent_registry=_agent_registry,
+    tool_registry=_tool_registry,
+    context=_agent_context,
+    data_dir=_data_dir,
+)
 
 
 # --- App Lifecycle ---
@@ -229,3 +278,200 @@ async def get_config():
         "dashboard_title": config.get("dashboard_title", "Dashboard"),
         "api_keys_needed": config.get("api_keys_needed", []),
     }
+
+
+# --- Credentials (neues System) ---
+
+@app.get("/api/credentials/types", dependencies=[Depends(require_auth)])
+async def get_credential_types():
+    return {"types": credential_manager.get_credential_types()}
+
+
+@app.get("/api/credentials", dependencies=[Depends(require_auth)])
+async def list_credentials():
+    return {"credentials": credential_manager.list_all()}
+
+
+@app.post("/api/credentials", dependencies=[Depends(require_auth)])
+async def save_credential(request: Request):
+    body = await request.json()
+    cred_type = body.get("type")
+    name = body.get("name", cred_type)
+    data = body.get("data", {})
+    cred_id = body.get("id")
+
+    if not cred_type or not data:
+        raise HTTPException(status_code=400, detail="Typ und Daten sind erforderlich.")
+
+    if cred_id:
+        credential_manager.update(cred_id, data)
+        await log(f"Credential '{name}' aktualisiert.")
+        return {"status": "ok", "id": cred_id}
+
+    new_id = credential_manager.create(name, cred_type, data)
+    await log(f"Credential '{name}' gespeichert.")
+    return {"status": "ok", "id": new_id}
+
+
+@app.post("/api/credentials/test", dependencies=[Depends(require_auth)])
+async def test_credential(request: Request):
+    body = await request.json()
+    cred_id = body.get("id")
+    if not cred_id:
+        raise HTTPException(status_code=400, detail="Credential-ID erforderlich.")
+    result = await credential_manager.test(cred_id)
+    return result
+
+
+@app.delete("/api/credentials/{cred_id}", dependencies=[Depends(require_auth)])
+async def delete_credential(cred_id: str):
+    credential_manager.delete(cred_id)
+    await log(f"Credential '{cred_id}' geloescht.")
+    return {"status": "ok"}
+
+
+# --- DSGVO ---
+
+@app.get("/api/dsgvo/persons", dependencies=[Depends(require_auth)])
+async def dsgvo_list_persons(limit: int = 100):
+    if not dsgvo_manager:
+        raise HTTPException(status_code=404, detail="DSGVO-Modul nicht aktiviert")
+    return {"persons": await dsgvo_manager.list_persons(limit)}
+
+
+@app.get("/api/dsgvo/persons/{person_id:path}", dependencies=[Depends(require_auth)])
+async def dsgvo_export_person(person_id: str):
+    if not dsgvo_manager:
+        raise HTTPException(status_code=404, detail="DSGVO-Modul nicht aktiviert")
+    return await dsgvo_manager.export_person_data(person_id)
+
+
+@app.delete("/api/dsgvo/persons/{person_id:path}", dependencies=[Depends(require_auth)])
+async def dsgvo_delete_person(person_id: str):
+    if not dsgvo_manager:
+        raise HTTPException(status_code=404, detail="DSGVO-Modul nicht aktiviert")
+    result = await dsgvo_manager.delete_person_data(person_id)
+    await log(f"DSGVO: Daten fuer '{person_id}' geloescht.")
+    return result
+
+
+@app.get("/api/dsgvo/consents", dependencies=[Depends(require_auth)])
+async def dsgvo_list_consents(person_id: str = None):
+    if not dsgvo_manager:
+        raise HTTPException(status_code=404, detail="DSGVO-Modul nicht aktiviert")
+    return {"consents": await dsgvo_manager.get_consents(person_id)}
+
+
+@app.post("/api/dsgvo/consents", dependencies=[Depends(require_auth)])
+async def dsgvo_add_consent(request: Request):
+    if not dsgvo_manager:
+        raise HTTPException(status_code=404, detail="DSGVO-Modul nicht aktiviert")
+    body = await request.json()
+    await dsgvo_manager.log_consent(
+        person_id=body["person_id"],
+        category=body["category"],
+        purpose=body["purpose"],
+        source=body.get("source", "manual"),
+        consent_type=body.get("consent_type", "legitimate_interest"),
+        notes=body.get("notes"),
+    )
+    return {"status": "ok"}
+
+
+@app.delete("/api/dsgvo/consents/{person_id:path}", dependencies=[Depends(require_auth)])
+async def dsgvo_revoke_consent(person_id: str, category: str = None):
+    if not dsgvo_manager:
+        raise HTTPException(status_code=404, detail="DSGVO-Modul nicht aktiviert")
+    await dsgvo_manager.revoke_consent(person_id, category)
+    return {"status": "ok"}
+
+
+@app.get("/api/dsgvo/audit", dependencies=[Depends(require_auth)])
+async def dsgvo_audit_trail(person_id: str = None, limit: int = 100):
+    if not dsgvo_manager:
+        raise HTTPException(status_code=404, detail="DSGVO-Modul nicht aktiviert")
+    return {"audit": await dsgvo_manager.get_audit_trail(person_id, limit)}
+
+
+# --- Kosten ---
+
+@app.get("/api/costs/summary", dependencies=[Depends(require_auth)])
+async def costs_summary(period: str = "today"):
+    return cost_tracker.get_summary(period)
+
+
+# --- Chat (Orchestrator) ---
+
+@app.post("/api/chat", dependencies=[Depends(require_auth)])
+async def chat_with_orchestrator(request: Request):
+    if not orchestrator:
+        raise HTTPException(status_code=404, detail="Orchestrator nicht aktiviert")
+    body = await request.json()
+    message = body.get("message", "")
+    user_id = body.get("user_id", "dashboard")
+    if not message:
+        raise HTTPException(status_code=400, detail="Nachricht fehlt")
+    response = await orchestrator.chat(message, user_id)
+    return {"response": response}
+
+
+# --- Agents ---
+
+@app.get("/api/agents", dependencies=[Depends(require_auth)])
+async def list_agents():
+    agents_info = []
+    for name, agent in _agent_registry.items():
+        agents_info.append({
+            "name": name,
+            "role": agent.role,
+            "description": agent.description,
+            "tools": agent.tools,
+            "model": agent.model,
+            "enabled": True,
+        })
+    return {"agents": agents_info}
+
+
+# --- Workflows ---
+
+@app.get("/api/workflows", dependencies=[Depends(require_auth)])
+async def list_workflow_definitions():
+    return {"workflows": _client_config.get("workflows", [])}
+
+
+@app.get("/api/workflows/runs", dependencies=[Depends(require_auth)])
+async def list_workflow_runs(workflow_name: str = None, limit: int = 20):
+    return {"runs": workflow_engine.list_runs(workflow_name, limit)}
+
+
+@app.get("/api/workflows/runs/{run_id}", dependencies=[Depends(require_auth)])
+async def get_workflow_run(run_id: str):
+    status = workflow_engine.get_status(run_id)
+    if not status:
+        raise HTTPException(status_code=404, detail="Workflow-Run nicht gefunden")
+    return status
+
+
+@app.post("/api/workflows/{workflow_name}/start", dependencies=[Depends(require_auth)])
+async def start_workflow(workflow_name: str, request: Request):
+    workflows = _client_config.get("workflows", [])
+    workflow_def = next((w for w in workflows if w["name"] == workflow_name), None)
+    if not workflow_def:
+        raise HTTPException(status_code=404, detail=f"Workflow '{workflow_name}' nicht gefunden")
+    body = await request.json() if await request.body() else {}
+    run_id = await workflow_engine.start(workflow_def, initial_data=body.get("data"))
+    return {"run_id": run_id, "status": "gestartet"}
+
+
+@app.post("/api/workflows/runs/{run_id}/resume", dependencies=[Depends(require_auth)])
+async def resume_workflow(run_id: str):
+    status = workflow_engine.get_status(run_id)
+    if not status:
+        raise HTTPException(status_code=404, detail="Workflow-Run nicht gefunden")
+    workflow_name = status["workflow_name"]
+    workflows = _client_config.get("workflows", [])
+    workflow_def = next((w for w in workflows if w["name"] == workflow_name), None)
+    if not workflow_def:
+        raise HTTPException(status_code=404, detail=f"Workflow-Definition '{workflow_name}' nicht gefunden")
+    result = await workflow_engine.resume(run_id, workflow_def)
+    return {"status": result}

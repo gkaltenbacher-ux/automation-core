@@ -29,7 +29,7 @@
                     <button type="submit" :disabled="loading"
                         class="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50">
                         <span x-show="!loading">Anmelden</span>
-                        <span x-show="loading">Wird geprüft...</span>
+                        <span x-show="loading">Wird geprueft...</span>
                     </button>
                 </form>
             </div>
@@ -39,9 +39,8 @@
     <!-- ==================== DASHBOARD ==================== -->
     <template x-if="authenticated">
         <div class="fade-in">
-            <!-- Header -->
             <header class="bg-white border-b border-gray-200 px-4 sm:px-6 py-4">
-                <div class="max-w-5xl mx-auto flex items-center justify-between">
+                <div class="max-w-6xl mx-auto flex items-center justify-between">
                     <div>
                         <h1 class="text-xl font-bold text-gray-800" x-text="title"></h1>
                         <p class="text-sm text-gray-500" x-text="companyName"></p>
@@ -50,145 +49,243 @@
                 </div>
             </header>
 
-            <!-- Tabs -->
-            <div class="max-w-5xl mx-auto px-4 sm:px-6 mt-6">
-                <div class="flex space-x-1 bg-gray-100 rounded-lg p-1 mb-6">
+            <div class="max-w-6xl mx-auto px-4 sm:px-6 mt-6">
+                <!-- Tab Navigation -->
+                <div class="flex flex-wrap gap-1 bg-gray-100 rounded-lg p-1 mb-6">
                     <template x-for="t in tabs" :key="t.id">
                         <button @click="tab = t.id"
                             :class="tab === t.id ? 'bg-white shadow text-gray-800' : 'text-gray-500 hover:text-gray-700'"
-                            class="flex-1 py-2 px-3 rounded-md text-sm font-medium transition" x-text="t.label">
+                            class="py-2 px-3 rounded-md text-sm font-medium transition" x-text="t.label">
                         </button>
                     </template>
                 </div>
 
-                <!-- Tab: API-Schlüssel -->
-                <div x-show="tab === 'keys'" x-data="keysApp()" x-init="loadKeys()" class="fade-in">
+                <!-- ===== TAB: CREDENTIALS ===== -->
+                <div x-show="tab === 'credentials'" x-data="credentialsApp()" x-init="load()" class="fade-in">
                     <div class="grid gap-4 sm:grid-cols-2">
-                        <template x-for="provider in providers" :key="provider.provider">
+                        <template x-for="(typeDef, typeId) in credTypes" :key="typeId">
                             <div class="bg-white rounded-xl border border-gray-200 p-5">
                                 <div class="flex items-center justify-between mb-3">
-                                    <div class="flex items-center space-x-2">
-                                        <span x-text="provider.emoji" class="text-xl"></span>
-                                        <h3 class="font-semibold text-gray-800" x-text="provider.label"></h3>
+                                    <h3 class="font-semibold text-gray-800" x-text="typeDef.name"></h3>
+                                    <span x-show="hasCred(typeId)" class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Gespeichert</span>
+                                </div>
+                                <p class="text-sm text-gray-500 mb-3" x-text="typeDef.description"></p>
+                                <template x-for="field in typeDef.fields" :key="field.name">
+                                    <div class="mb-2">
+                                        <label class="text-xs text-gray-500 block mb-1" x-text="field.label"></label>
+                                        <input :type="field.type || 'text'" x-model="formData[typeId + '.' + field.name]"
+                                            :placeholder="field.placeholder || ''"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none">
                                     </div>
-                                    <span x-show="provider.saved"
-                                        class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Gespeichert</span>
+                                </template>
+                                <div class="flex space-x-2 mt-3">
+                                    <button @click="save(typeId, typeDef)"
+                                        class="text-sm bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 transition">Speichern</button>
+                                    <button x-show="hasCred(typeId)" @click="test(typeId)"
+                                        class="text-sm bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg hover:bg-gray-200 transition">Testen</button>
                                 </div>
-
-                                <div x-show="provider.saved && !provider.editing" class="mb-3">
-                                    <p class="text-sm text-gray-500 font-mono" x-text="provider.masked"></p>
-                                </div>
-
-                                <div x-show="!provider.saved || provider.editing" class="mb-3">
-                                    <input type="password" x-model="provider.newKey" :placeholder="'Key eingeben...'"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none">
-                                </div>
-
-                                <div class="flex space-x-2">
-                                    <template x-if="!provider.saved || provider.editing">
-                                        <button @click="saveKey(provider)"
-                                            class="text-sm bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 transition">
-                                            Speichern
-                                        </button>
-                                    </template>
-                                    <template x-if="provider.saved && !provider.editing">
-                                        <button @click="provider.editing = true"
-                                            class="text-sm bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg hover:bg-gray-200 transition">
-                                            Ändern
-                                        </button>
-                                    </template>
-                                    <template x-if="provider.saved">
-                                        <button @click="testKey(provider)"
-                                            class="text-sm bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg hover:bg-gray-200 transition">
-                                            Testen
-                                        </button>
-                                    </template>
-                                </div>
-
-                                <!-- Anleitung -->
-                                <div class="mt-3">
-                                    <button @click="provider.showGuide = !provider.showGuide"
-                                        class="text-xs text-blue-500 hover:text-blue-700">
-                                        <span x-show="!provider.showGuide">Anleitung zeigen</span>
-                                        <span x-show="provider.showGuide">Anleitung ausblenden</span>
-                                    </button>
-                                    <div x-show="provider.showGuide" class="mt-2 text-xs text-gray-500 whitespace-pre-line bg-gray-50 rounded-lg p-3"
-                                        x-text="provider.guide"></div>
-                                </div>
-
-                                <p x-show="provider.message" x-text="provider.message"
-                                    :class="provider.messageType === 'error' ? 'text-red-500' : 'text-green-600'"
-                                    class="text-xs mt-2"></p>
+                                <p x-show="messages[typeId]" x-text="messages[typeId]" class="text-xs mt-2 text-green-600"></p>
                             </div>
                         </template>
                     </div>
-                    <p x-show="providers.length === 0" class="text-gray-400 text-center py-8">Keine API-Keys konfiguriert.</p>
+                    <p x-show="Object.keys(credTypes).length === 0" class="text-gray-400 text-center py-8">Keine Credential-Typen konfiguriert.</p>
                 </div>
 
-                <!-- Tab: Automationen -->
-                <div x-show="tab === 'automations'" x-data="automationsApp()" x-init="loadAutomations()" class="fade-in">
+                <!-- ===== TAB: AGENTS ===== -->
+                <div x-show="tab === 'agents'" x-data="agentsApp()" x-init="load()" class="fade-in">
                     <div class="grid gap-4">
-                        <template x-for="auto in automations" :key="auto.name">
+                        <template x-for="agent in agents" :key="agent.name">
                             <div class="bg-white rounded-xl border border-gray-200 p-5">
                                 <div class="flex items-center justify-between mb-2">
                                     <div>
-                                        <h3 class="font-semibold text-gray-800" x-text="auto.name"></h3>
-                                        <p class="text-sm text-gray-500" x-text="auto.description"></p>
+                                        <h3 class="font-semibold text-gray-800" x-text="agent.name"></h3>
+                                        <p class="text-sm text-gray-500" x-text="agent.description || agent.role"></p>
                                     </div>
-                                    <div class="flex items-center space-x-3">
-                                        <span class="text-xs text-gray-400" x-text="auto.schedule"></span>
-                                        <button @click="toggle(auto)"
-                                            :class="auto.enabled ? 'bg-blue-600' : 'bg-gray-300'"
-                                            class="relative w-11 h-6 rounded-full transition">
-                                            <span :class="auto.enabled ? 'translate-x-5' : 'translate-x-0.5'"
-                                                class="inline-block w-5 h-5 bg-white rounded-full shadow transform transition mt-0.5"></span>
-                                        </button>
-                                    </div>
+                                    <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full" x-text="agent.model"></span>
                                 </div>
-
-                                <div class="flex flex-wrap gap-1.5 mb-3">
-                                    <template x-for="step in auto.steps" :key="step">
-                                        <span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded" x-text="step"></span>
+                                <div class="flex flex-wrap gap-1.5 mt-2">
+                                    <template x-for="tool in agent.tools" :key="tool">
+                                        <span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded" x-text="tool"></span>
                                     </template>
-                                </div>
-
-                                <!-- Letzte Runs -->
-                                <button @click="auto.showRuns = !auto.showRuns; if(auto.showRuns) loadRuns(auto)"
-                                    class="text-xs text-blue-500 hover:text-blue-700">
-                                    <span x-show="!auto.showRuns">Letzte Runs zeigen</span>
-                                    <span x-show="auto.showRuns">Runs ausblenden</span>
-                                </button>
-                                <div x-show="auto.showRuns" class="mt-2 space-y-1">
-                                    <template x-for="run in auto.runs" :key="run.id">
-                                        <div class="flex items-center justify-between text-xs bg-gray-50 rounded-lg px-3 py-2">
-                                            <span class="text-gray-500" x-text="run.started_at"></span>
-                                            <span :class="run.status === 'success' ? 'text-green-600' : run.status === 'error' ? 'text-red-500' : 'text-yellow-600'"
-                                                x-text="run.status === 'success' ? 'Erfolgreich' : run.status === 'error' ? 'Fehler' : 'Läuft...'"></span>
-                                        </div>
-                                    </template>
-                                    <p x-show="auto.runs && auto.runs.length === 0" class="text-xs text-gray-400">Noch keine Runs.</p>
                                 </div>
                             </div>
                         </template>
                     </div>
-                    <p x-show="automations.length === 0" class="text-gray-400 text-center py-8">Keine Automationen konfiguriert.</p>
+                    <p x-show="agents.length === 0" class="text-gray-400 text-center py-8">Keine Agents konfiguriert. Agents werden in client.json definiert.</p>
                 </div>
 
-                <!-- Tab: Aktivität -->
-                <div x-show="tab === 'logs'" x-data="logsApp()" x-init="loadLogs(); startStream()" class="fade-in">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="flex space-x-2">
-                            <select x-model="filterLevel" @change="loadLogs()"
-                                class="text-sm border border-gray-300 rounded-lg px-3 py-1.5 outline-none focus:ring-2 focus:ring-blue-500">
-                                <option value="">Alle Level</option>
-                                <option value="info">Info</option>
-                                <option value="warning">Warnung</option>
-                                <option value="error">Fehler</option>
-                            </select>
+                <!-- ===== TAB: CHAT ===== -->
+                <div x-show="tab === 'chat'" x-data="chatApp()" class="fade-in">
+                    <div class="bg-white rounded-xl border border-gray-200 flex flex-col" style="height: 500px;">
+                        <div class="flex-1 overflow-y-auto p-4 space-y-3" x-ref="chatMessages">
+                            <template x-for="(msg, i) in messages" :key="i">
+                                <div :class="msg.role === 'user' ? 'text-right' : 'text-left'">
+                                    <div :class="msg.role === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-800'"
+                                        class="inline-block px-4 py-2 rounded-xl max-w-[80%] text-sm whitespace-pre-wrap" x-text="msg.content"></div>
+                                </div>
+                            </template>
+                            <div x-show="loading" class="text-left">
+                                <div class="inline-block bg-gray-100 text-gray-500 px-4 py-2 rounded-xl text-sm">Denkt nach...</div>
+                            </div>
                         </div>
-                        <button @click="loadLogs()" class="text-sm text-blue-500 hover:text-blue-700">Aktualisieren</button>
+                        <div class="border-t border-gray-200 p-3">
+                            <form @submit.prevent="send()" class="flex space-x-2">
+                                <input type="text" x-model="input" placeholder="Nachricht eingeben..."
+                                    class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                                    :disabled="loading">
+                                <button type="submit" :disabled="loading || !input.trim()"
+                                    class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition disabled:opacity-50">Senden</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== TAB: WORKFLOWS ===== -->
+                <div x-show="tab === 'workflows'" x-data="workflowsApp()" x-init="load()" class="fade-in">
+                    <!-- Workflow-Definitionen -->
+                    <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Workflows</h3>
+                    <div class="grid gap-4 mb-8">
+                        <template x-for="wf in definitions" :key="wf.name">
+                            <div class="bg-white rounded-xl border border-gray-200 p-5">
+                                <div class="flex items-center justify-between mb-2">
+                                    <div>
+                                        <h3 class="font-semibold text-gray-800" x-text="wf.name"></h3>
+                                        <p class="text-sm text-gray-500" x-text="wf.description"></p>
+                                    </div>
+                                    <button @click="startWorkflow(wf.name)"
+                                        class="text-sm bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 transition">Starten</button>
+                                </div>
+                                <div class="flex flex-wrap gap-1.5 mt-2">
+                                    <template x-for="(step, i) in wf.steps" :key="i">
+                                        <span class="text-xs px-2 py-1 rounded"
+                                            :class="step.type === 'pause' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-600'"
+                                            x-text="step.type === 'pause' ? 'Pause' : (step.agent || step.tool)"></span>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                    <p x-show="definitions.length === 0" class="text-gray-400 text-center py-4">Keine Workflows konfiguriert.</p>
+
+                    <!-- Letzte Runs -->
+                    <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Letzte Runs</h3>
+                    <div class="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
+                        <template x-for="run in runs" :key="run.id">
+                            <div class="px-4 py-3 flex items-center justify-between">
+                                <div>
+                                    <span class="text-sm font-medium text-gray-800" x-text="run.workflow_name"></span>
+                                    <span class="text-xs text-gray-400 ml-2" x-text="run.started_at"></span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-xs px-2 py-1 rounded-full"
+                                        :class="{
+                                            'bg-green-100 text-green-700': run.status === 'completed',
+                                            'bg-yellow-100 text-yellow-700': run.status === 'paused',
+                                            'bg-red-100 text-red-700': run.status === 'error',
+                                            'bg-blue-100 text-blue-700': run.status === 'running',
+                                        }" x-text="run.status === 'completed' ? 'Fertig' : run.status === 'paused' ? 'Pausiert' : run.status === 'error' ? 'Fehler' : 'Laeuft'"></span>
+                                    <button x-show="run.status === 'paused'" @click="resumeWorkflow(run.id)"
+                                        class="text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 transition">Fortsetzen</button>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                    <p x-show="runs.length === 0" class="text-gray-400 text-center py-4">Noch keine Workflow-Runs.</p>
+                </div>
+
+                <!-- ===== TAB: KOSTEN ===== -->
+                <div x-show="tab === 'costs'" x-data="costsApp()" x-init="load()" class="fade-in">
+                    <div class="flex space-x-2 mb-4">
+                        <template x-for="p in ['today', 'week', 'month']" :key="p">
+                            <button @click="period = p; load()"
+                                :class="period === p ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 border border-gray-200'"
+                                class="px-3 py-1.5 rounded-lg text-sm font-medium transition"
+                                x-text="p === 'today' ? 'Heute' : p === 'week' ? 'Woche' : 'Monat'"></button>
+                        </template>
                     </div>
 
+                    <div class="grid gap-4 sm:grid-cols-3 mb-6">
+                        <div class="bg-white rounded-xl border border-gray-200 p-5 text-center">
+                            <p class="text-2xl font-bold text-gray-800">$<span x-text="summary.total_cost_usd"></span></p>
+                            <p class="text-sm text-gray-500">Kosten (USD)</p>
+                        </div>
+                        <div class="bg-white rounded-xl border border-gray-200 p-5 text-center">
+                            <p class="text-2xl font-bold text-gray-800" x-text="(summary.total_tokens || 0).toLocaleString()"></p>
+                            <p class="text-sm text-gray-500">Tokens</p>
+                        </div>
+                        <div class="bg-white rounded-xl border border-gray-200 p-5 text-center">
+                            <p class="text-2xl font-bold text-gray-800" x-text="summary.total_calls || 0"></p>
+                            <p class="text-sm text-gray-500">LLM-Calls</p>
+                        </div>
+                    </div>
+
+                    <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Pro Agent</h3>
+                    <div class="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
+                        <template x-for="a in summary.by_agent || []" :key="a.agent">
+                            <div class="px-4 py-3 flex items-center justify-between">
+                                <span class="text-sm font-medium text-gray-800" x-text="a.agent"></span>
+                                <div class="text-right">
+                                    <span class="text-sm font-semibold text-gray-800">$<span x-text="a.cost_usd"></span></span>
+                                    <span class="text-xs text-gray-400 ml-2" x-text="a.calls + ' Calls'"></span>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                    <p x-show="!summary.by_agent || summary.by_agent.length === 0" class="text-gray-400 text-center py-4">Noch keine Kosten.</p>
+                </div>
+
+                <!-- ===== TAB: DSGVO ===== -->
+                <div x-show="tab === 'dsgvo'" x-data="dsgvoApp()" class="fade-in">
+                    <div class="bg-white rounded-xl border border-gray-200 p-5 mb-6">
+                        <h3 class="font-semibold text-gray-800 mb-3">Person suchen</h3>
+                        <form @submit.prevent="search()" class="flex space-x-2">
+                            <input type="text" x-model="query" placeholder="E-Mail oder Name eingeben..."
+                                class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none">
+                            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition">Suchen</button>
+                        </form>
+                    </div>
+
+                    <!-- Suchergebnis -->
+                    <div x-show="personData" class="bg-white rounded-xl border border-gray-200 p-5 mb-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-semibold text-gray-800" x-text="personData?.person_identifier || ''"></h3>
+                            <div class="flex space-x-2">
+                                <button @click="exportData()" class="text-sm bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg hover:bg-gray-200 transition">Export (JSON)</button>
+                                <button @click="deleteData()" class="text-sm bg-red-600 text-white px-3 py-1.5 rounded-lg hover:bg-red-700 transition">Alle Daten loeschen</button>
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <p class="text-sm text-gray-500">Einwilligungen: <span class="font-medium text-gray-800" x-text="personData?.consents?.length || 0"></span></p>
+                            <p class="text-sm text-gray-500">Datensaetze: <span class="font-medium text-gray-800" x-text="personData?.data_inventory?.length || 0"></span></p>
+                            <p class="text-sm text-gray-500">Audit-Eintraege: <span class="font-medium text-gray-800" x-text="personData?.audit_trail?.length || 0"></span></p>
+                        </div>
+                    </div>
+
+                    <!-- Alle Personen -->
+                    <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Erfasste Personen</h3>
+                    <div x-init="loadPersons()" class="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
+                        <template x-for="p in persons" :key="p.person_identifier">
+                            <div class="px-4 py-3 flex items-center justify-between cursor-pointer hover:bg-gray-50" @click="query = p.person_identifier; search()">
+                                <span class="text-sm text-gray-800" x-text="p.person_identifier"></span>
+                                <span class="text-xs text-gray-400" x-text="p.record_count + ' Datensaetze'"></span>
+                            </div>
+                        </template>
+                    </div>
+                    <p x-show="persons.length === 0" class="text-gray-400 text-center py-4">Keine Personen erfasst.</p>
+                </div>
+
+                <!-- ===== TAB: LOGS ===== -->
+                <div x-show="tab === 'logs'" x-data="logsApp()" x-init="loadLogs(); startStream()" class="fade-in">
+                    <div class="flex items-center justify-between mb-4">
+                        <select x-model="filterLevel" @change="loadLogs()"
+                            class="text-sm border border-gray-300 rounded-lg px-3 py-1.5 outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">Alle Level</option>
+                            <option value="info">Info</option>
+                            <option value="warning">Warnung</option>
+                            <option value="error">Fehler</option>
+                        </select>
+                        <button @click="loadLogs()" class="text-sm text-blue-500 hover:text-blue-700">Aktualisieren</button>
+                    </div>
                     <div class="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
                         <template x-for="entry in logs" :key="entry.id">
                             <div class="px-4 py-3 flex items-start space-x-3">
@@ -200,16 +297,14 @@
                                     x-text="entry.level === 'info' ? 'Info' : entry.level === 'warning' ? 'Warnung' : 'Fehler'"></span>
                                 <div class="flex-1 min-w-0">
                                     <p class="text-sm text-gray-800" x-text="entry.message"></p>
-                                    <div class="flex space-x-3 mt-1">
-                                        <span class="text-xs text-gray-400" x-text="entry.timestamp"></span>
-                                        <span x-show="entry.automation_name" class="text-xs text-gray-400" x-text="entry.automation_name"></span>
-                                    </div>
+                                    <span class="text-xs text-gray-400" x-text="entry.timestamp"></span>
                                 </div>
                             </div>
                         </template>
                     </div>
-                    <p x-show="logs.length === 0" class="text-gray-400 text-center py-8">Noch keine Log-Einträge.</p>
+                    <p x-show="logs.length === 0" class="text-gray-400 text-center py-8">Noch keine Log-Eintraege.</p>
                 </div>
+
             </div>
         </div>
     </template>
@@ -217,49 +312,35 @@
 
 <script>
     const API = '';
-
-    function getToken() {
-        return sessionStorage.getItem('auth_token') || '';
-    }
-
-    function authHeaders() {
-        return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() };
-    }
-
+    function getToken() { return sessionStorage.getItem('auth_token') || ''; }
+    function authHeaders() { return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() }; }
     async function api(path, options = {}) {
         const res = await fetch(API + path, { headers: authHeaders(), ...options });
-        if (res.status === 401) {
-            sessionStorage.removeItem('auth_token');
-            location.reload();
-            return null;
-        }
+        if (res.status === 401) { sessionStorage.removeItem('auth_token'); location.reload(); return null; }
         return res;
     }
 
     function loginApp() {
         return {
-            password: '',
-            error: '',
-            loading: false,
+            password: '', error: '', loading: false,
             authenticated: !!sessionStorage.getItem('auth_token'),
-            title: 'Dashboard',
-            companyName: '',
-            tab: 'keys',
+            title: 'Dashboard', companyName: '',
+            tab: 'credentials',
             tabs: [
-                { id: 'keys', label: 'API-Schlüssel' },
-                { id: 'automations', label: 'Automationen' },
-                { id: 'logs', label: 'Aktivität' },
+                { id: 'credentials', label: 'Credentials' },
+                { id: 'agents', label: 'Agents' },
+                { id: 'chat', label: 'Chat' },
+                { id: 'workflows', label: 'Workflows' },
+                { id: 'costs', label: 'Kosten' },
+                { id: 'dsgvo', label: 'DSGVO' },
+                { id: 'logs', label: 'Logs' },
             ],
-            async init() {
-                if (this.authenticated) await this.loadConfig();
-            },
+            async init() { if (this.authenticated) await this.loadConfig(); },
             async login() {
-                this.loading = true;
-                this.error = '';
+                this.loading = true; this.error = '';
                 try {
                     const res = await fetch(API + '/api/auth/login', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ password: this.password }),
                     });
                     if (res.ok) {
@@ -271,9 +352,7 @@
                         const err = await res.json();
                         this.error = err.detail || 'Anmeldung fehlgeschlagen';
                     }
-                } catch (e) {
-                    this.error = 'Verbindung zum Server fehlgeschlagen';
-                }
+                } catch (e) { this.error = 'Verbindung zum Server fehlgeschlagen'; }
                 this.loading = false;
             },
             async loadConfig() {
@@ -285,105 +364,146 @@
                     document.title = this.title;
                 }
             },
-            logout() {
-                sessionStorage.removeItem('auth_token');
-                this.authenticated = false;
-                this.password = '';
+            logout() { sessionStorage.removeItem('auth_token'); this.authenticated = false; this.password = ''; }
+        };
+    }
+
+    function credentialsApp() {
+        return {
+            credTypes: {}, credentials: [], formData: {}, messages: {},
+            async load() {
+                const typesRes = await api('/api/credentials/types');
+                if (typesRes && typesRes.ok) { this.credTypes = (await typesRes.json()).types || {}; }
+                const credsRes = await api('/api/credentials');
+                if (credsRes && credsRes.ok) { this.credentials = (await credsRes.json()).credentials || []; }
+            },
+            hasCred(typeId) { return this.credentials.some(c => c.type === typeId); },
+            async save(typeId, typeDef) {
+                const data = {};
+                for (const field of typeDef.fields) {
+                    const val = this.formData[typeId + '.' + field.name] || '';
+                    if (field.required && !val.trim()) { this.messages[typeId] = 'Pflichtfeld fehlt'; return; }
+                    data[field.name] = val;
+                }
+                const existing = this.credentials.find(c => c.type === typeId);
+                const body = { type: typeId, name: typeDef.name, data };
+                if (existing) body.id = existing.id;
+                const res = await api('/api/credentials', { method: 'POST', body: JSON.stringify(body) });
+                if (res && res.ok) {
+                    this.messages[typeId] = 'Gespeichert!';
+                    await this.load();
+                    for (const field of typeDef.fields) this.formData[typeId + '.' + field.name] = '';
+                }
+                setTimeout(() => this.messages[typeId] = '', 3000);
+            },
+            async test(typeId) {
+                const cred = this.credentials.find(c => c.type === typeId);
+                if (!cred) return;
+                const res = await api('/api/credentials/test', { method: 'POST', body: JSON.stringify({ id: cred.id }) });
+                if (res && res.ok) {
+                    const data = await res.json();
+                    this.messages[typeId] = data.ok ? data.message : data.error;
+                }
+                setTimeout(() => this.messages[typeId] = '', 3000);
             }
         };
     }
 
-    function keysApp() {
+    function agentsApp() {
         return {
-            providers: [],
-            async loadKeys() {
-                // Konfigurierte Provider laden
-                const configRes = await api('/api/config');
-                let needed = [];
-                if (configRes && configRes.ok) {
-                    const config = await configRes.json();
-                    needed = config.api_keys_needed || [];
-                }
-                // Gespeicherte Keys laden
-                const keysRes = await api('/api/keys');
-                let saved = {};
-                if (keysRes && keysRes.ok) {
-                    const data = await keysRes.json();
-                    for (const k of data.keys) saved[k.provider] = k;
-                }
-                // Zusammenführen
-                this.providers = needed.map(p => ({
-                    provider: p.provider,
-                    label: p.label,
-                    emoji: p.emoji || '',
-                    guide: p.guide || '',
-                    saved: !!saved[p.provider],
-                    masked: saved[p.provider] ? saved[p.provider].masked_key : '',
-                    newKey: '',
-                    editing: false,
-                    showGuide: false,
-                    message: '',
-                    messageType: '',
-                }));
-            },
-            async saveKey(provider) {
-                if (!provider.newKey.trim()) { provider.message = 'Bitte Key eingeben'; provider.messageType = 'error'; return; }
-                const res = await api('/api/keys', {
-                    method: 'POST',
-                    body: JSON.stringify({ provider: provider.provider, key: provider.newKey }),
-                });
+            agents: [],
+            async load() {
+                const res = await api('/api/agents');
+                if (res && res.ok) { this.agents = (await res.json()).agents || []; }
+            }
+        };
+    }
+
+    function chatApp() {
+        return {
+            messages: [], input: '', loading: false,
+            async send() {
+                if (!this.input.trim() || this.loading) return;
+                const msg = this.input.trim();
+                this.messages.push({ role: 'user', content: msg });
+                this.input = ''; this.loading = true;
+                this.$nextTick(() => { this.$refs.chatMessages.scrollTop = this.$refs.chatMessages.scrollHeight; });
+                const res = await api('/api/chat', { method: 'POST', body: JSON.stringify({ message: msg }) });
+                this.loading = false;
                 if (res && res.ok) {
-                    provider.message = 'Gespeichert!';
-                    provider.messageType = 'success';
-                    provider.newKey = '';
-                    provider.editing = false;
-                    await this.loadKeys();
+                    const data = await res.json();
+                    this.messages.push({ role: 'assistant', content: data.response });
                 } else {
-                    provider.message = 'Fehler beim Speichern';
-                    provider.messageType = 'error';
+                    this.messages.push({ role: 'assistant', content: 'Fehler: Orchestrator nicht erreichbar. Ist er in client.json aktiviert?' });
                 }
-                setTimeout(() => provider.message = '', 3000);
-            },
-            async testKey(provider) {
-                const res = await api('/api/keys/test', {
-                    method: 'POST',
-                    body: JSON.stringify({ provider: provider.provider }),
-                });
-                if (res && res.ok) {
-                    const data = await res.json();
-                    provider.message = data.message;
-                    provider.messageType = data.status === 'ok' ? 'success' : 'error';
-                }
-                setTimeout(() => provider.message = '', 3000);
+                this.$nextTick(() => { this.$refs.chatMessages.scrollTop = this.$refs.chatMessages.scrollHeight; });
             }
         };
     }
 
-    function automationsApp() {
+    function workflowsApp() {
         return {
-            automations: [],
-            async loadAutomations() {
-                const res = await api('/api/automations');
-                if (res && res.ok) {
-                    const data = await res.json();
-                    this.automations = data.automations.map(a => ({ ...a, showRuns: false, runs: [] }));
-                }
+            definitions: [], runs: [],
+            async load() {
+                const defRes = await api('/api/workflows');
+                if (defRes && defRes.ok) { this.definitions = (await defRes.json()).workflows || []; }
+                const runsRes = await api('/api/workflows/runs');
+                if (runsRes && runsRes.ok) { this.runs = (await runsRes.json()).runs || []; }
             },
-            async toggle(auto) {
-                const res = await api('/api/automations/toggle', {
-                    method: 'POST',
-                    body: JSON.stringify({ name: auto.name }),
-                });
-                if (res && res.ok) {
-                    const data = await res.json();
-                    auto.enabled = data.enabled;
-                }
+            async startWorkflow(name) {
+                const res = await api('/api/workflows/' + encodeURIComponent(name) + '/start', { method: 'POST' });
+                if (res && res.ok) { await this.load(); }
             },
-            async loadRuns(auto) {
-                const res = await api('/api/automations/runs?name=' + encodeURIComponent(auto.name) + '&limit=10');
+            async resumeWorkflow(runId) {
+                const res = await api('/api/workflows/runs/' + runId + '/resume', { method: 'POST' });
+                if (res && res.ok) { await this.load(); }
+            }
+        };
+    }
+
+    function costsApp() {
+        return {
+            period: 'today', summary: {},
+            async load() {
+                const res = await api('/api/costs/summary?period=' + this.period);
+                if (res && res.ok) { this.summary = await res.json(); }
+            }
+        };
+    }
+
+    function dsgvoApp() {
+        return {
+            query: '', personData: null, persons: [],
+            async search() {
+                if (!this.query.trim()) return;
+                const res = await api('/api/dsgvo/persons/' + encodeURIComponent(this.query));
+                if (res && res.ok) { this.personData = await res.json(); }
+            },
+            async loadPersons() {
+                const res = await api('/api/dsgvo/persons');
+                if (res && res.ok) { this.persons = (await res.json()).persons || []; }
+            },
+            async exportData() {
+                if (!this.personData) return;
+                const blob = new Blob([JSON.stringify(this.personData, null, 2)], { type: 'application/json' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = 'dsgvo_export_' + this.personData.person_identifier + '.json';
+                a.click();
+            },
+            async deleteData() {
+                if (!this.personData) return;
+                if (!confirm('Alle Daten fuer ' + this.personData.person_identifier + ' unwiderruflich loeschen?')) return;
+                const res = await api('/api/dsgvo/persons/' + encodeURIComponent(this.personData.person_identifier), { method: 'DELETE' });
                 if (res && res.ok) {
-                    const data = await res.json();
-                    auto.runs = data.runs;
+                    const result = await res.json();
+                    let msg = 'Geloescht.';
+                    if (result.external_deletions_required?.length > 0) {
+                        msg += '\n\nManuell loeschen:\n' + result.external_deletions_required.map(d => '- ' + d.action).join('\n');
+                    }
+                    alert(msg);
+                    this.personData = null;
+                    await this.loadPersons();
                 }
             }
         };
@@ -391,24 +511,18 @@
 
     function logsApp() {
         return {
-            logs: [],
-            filterLevel: '',
-            eventSource: null,
+            logs: [], filterLevel: '', eventSource: null,
             async loadLogs() {
                 let url = '/api/logs?limit=100';
                 if (this.filterLevel) url += '&level=' + this.filterLevel;
                 const res = await api(url);
-                if (res && res.ok) {
-                    const data = await res.json();
-                    this.logs = data.logs;
-                }
+                if (res && res.ok) { this.logs = (await res.json()).logs || []; }
             },
             startStream() {
                 if (this.eventSource) this.eventSource.close();
                 this.eventSource = new EventSource(API + '/api/logs/stream?token=' + getToken());
                 this.eventSource.onmessage = (event) => {
                     const entry = JSON.parse(event.data);
-                    // Duplikate vermeiden
                     if (!this.logs.find(l => l.id === entry.id)) {
                         this.logs.unshift(entry);
                         if (this.logs.length > 200) this.logs.pop();

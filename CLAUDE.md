@@ -1,61 +1,64 @@
 # CLAUDE.md — Projekt-Regeln
 
-## Projekt
-Automations-Plattform für Consulting-Kunden.
-Drei-Schichten-Architektur: Core (alle gleich) → Blocks (wiederverwendbar) → Config (kunden-spezifisch).
+## Was ist das
+Automation-Plattform fuer Consulting-Kunden. Grischa baut mit Claude Code Agent-Systeme.
+Blueprint waehlen → Config anpassen → deployen. Jedes Projekt wird einfacher.
 
-## Stack (NUR diese — KEINE anderen)
-- Backend: FastAPI (Python 3.11+). NICHT Flask. NICHT Django. NICHT Express.
-- Datenbank: SQLite mit Write-Queue. NICHT PostgreSQL. NICHT MongoDB. NICHT Redis.
-- Dashboard: EINE HTML-Datei, Tailwind + Alpine.js via CDN. NICHT React. NICHT Vue. NICHT Svelte. NICHT Next.js. KEIN Build-Step. KEIN npm. Auch nicht "später". Auch nicht "nur für diesen Tab".
+## Ordnerstruktur
+```
+automation-core/
+  backend/           ← FastAPI Server (ALLE Kunden gleich)
+    main.py          ← Endpoints + App-Start
+    credentials.py   ← API-Key Verwaltung (Fernet, config-getrieben)
+    orchestrator.py  ← Chat-Routing zu Agents (OpenAI Function Calling)
+    workflow_engine.py ← Sequenzielle Workflows mit Pause/Resume
+    cost_tracker.py  ← Token + Kosten pro LLM-Call
+    dsgvo.py         ← DSGVO Compliance (Consent, Export, Loeschung)
+    telegram_bot.py  ← Telegram Integration (optional, config-getrieben)
+    database.py      ← SQLite + Write-Queue
+    pipeline.py      ← Legacy Block-Pipeline
+    scheduler.py     ← APScheduler Cron-Jobs
+    config.py        ← .env Variablen
+    crypto.py        ← Legacy Verschluesselung (ersetzt durch credentials.py)
+    logger.py        ← Logging
+    rate_limiter.py  ← Login Rate-Limiting
+  agents/            ← Sub-Agents (pro Projekt konfigurierbar)
+    base_agent.py    ← Basis-Klasse (execute, use_tool, call_llm)
+    __init__.py      ← Auto-Discovery Registry
+  tools/             ← Wiederverwendbare Funktionen
+    base_tool.py     ← Basis-Klasse
+    generate_text.py ← Referenz-Tool (OpenAI)
+    __init__.py      ← Auto-Discovery Registry
+  config/            ← Kunden-spezifisch
+    client.json      ← STEUERT ALLES (Agents, Tools, Workflows, Credentials)
+    custom_prompts/  ← Prompt-Templates
+  dashboard/
+    index.html       ← EINE HTML-Datei, 7 Tabs (Tailwind + Alpine.js)
+  blueprints/        ← Projekt-Vorlagen (Blueprint waehlen → Config kopieren)
+    lead_generation/ ← Erster Blueprint (Lead-Scraping + Outreach)
+  data/              ← Laufzeit-Daten (SQLite, Keys) — im Docker Volume
+```
+
+## Stack (NUR diese)
+- Backend: FastAPI (Python 3.11+). NICHT Flask/Django.
+- Datenbank: SQLite. NICHT PostgreSQL.
+- Dashboard: EINE HTML-Datei, Tailwind + Alpine.js. NICHT React. KEIN npm.
+- AI: OpenAI Function Calling. NICHT LangChain.
 - Scheduling: APScheduler. NICHT Celery.
-- Verschlüsselung: Fernet (cryptography). NICHT eigene Crypto.
-- Container: Docker Compose. NICHT Kubernetes.
+- Verschluesselung: Fernet. Container: Docker Compose.
 
 ## Architektur-Regeln
 
-### Regel 1: Drei Schichten respektieren
-- core/ = Backend-Infrastruktur (ALLE Kunden gleich)
-- blocks/ = Wiederverwendbare Automations-Bausteine (ALLE Kunden gleich)
-- config/ = Kunden-spezifisch (NIE automatisch überschreiben)
-- NIEMALS kunden-spezifische Logik in core/ oder blocks/
+1. **Alles ueber client.json** — Agents, Tools, Workflows, Credentials, DSGVO. Kein Code aendern fuer neues Projekt.
+2. **Tool-Interface:** `async def run(params, context) -> dict`
+3. **Agent-Interface:** Erbt von BaseAgent, hat execute() + use_tool()
+4. **Orchestrator:** Liest Agents aus Config, routet via Function Calling
+5. **Logging:** Normale Sprache ("3 Leads gefunden"), kein Tech-Jargon
+6. **API-Keys:** Immer via `context["get_api_key"]()`, nie hardcoden
+7. **Dashboard:** EINE index.html, Alpine.js x-data pro Tab, Deutsch
+8. **Sicherheit:** Fernet, Rate-Limiting, HTTPS-Redirect
+9. **Docker:** `docker compose up` startet alles, SQLite in /data/
+10. **DSGVO:** Consent-Logging, Daten-Export, Daten-Loeschung, Audit-Trail
 
-### Regel 2: Block-Interface (JEDER Block so)
-async def execute(input_data: dict, config: dict, context: dict) -> dict
-- input_data: Ausgabe des vorherigen Blocks
-- config: Block-Einstellungen aus client.json
-- context: {"log": log_fn, "get_api_key": fn, "db": db}
-- return: {"success": True/False, "data": {...}, "error": "..."}
-
-### Regel 3: Pipeline
-- Automationen werden in client.json definiert, NICHT als Python-Code
-- pipeline.py liest client.json, importiert Blocks, führt sie der Reihe nach aus
-- Ausgabe Block N = Eingabe Block N+1
-
-### Regel 4: Logging (mit Write-Queue)
-- JEDER Schritt wird geloggt mit context["log"]()
-- NORMALE SPRACHE: "3 neue E-Mails gefunden"
-- NICHT: "Processed 3 items from IMAP queue"
-- Writes gehen in asyncio.Queue, nicht direkt in SQLite
-
-### Regel 5: API-Keys
-- IMMER über context["get_api_key"]("provider")
-- NIEMALS hardcoden
-- .env nur für SYSTEM-Variablen
-
-### Regel 6: Dashboard
-- EINE index.html. KEIN Framework. KEIN Build-Step.
-- Jeder Tab = eigenständiger Alpine.js x-data Block
-- Dashboard liest api_keys_needed und automations aus client.json
-- Texte auf Deutsch
-
-### Regel 7: Sicherheit
-- Fernet-Verschlüsselung für API-Keys
-- Rate-Limiting: 5 Login-Versuche/Min/IP
-- HTTPS-Redirect in Produktion
-- /api/health OHNE Auth
-
-### Regel 8: Docker
-- docker compose up startet alles
-- SQLite in /data/ (Volume)
-- Dashboard wird als Static File serviert
+## Neues Projekt
+→ Siehe NEW_PROJECT.md

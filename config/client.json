@@ -1,13 +1,53 @@
 {
+  "version": "2.0",
   "company_name": "Test GmbH",
   "language": "de",
   "dashboard_title": "Test Dashboard",
   "dashboard_logo_url": "",
 
+  "credential_types": {
+    "openai_api": {
+      "name": "OpenAI API",
+      "description": "API Key fuer GPT Models",
+      "icon": "",
+      "fields": [
+        {"name": "api_key", "label": "API Key", "type": "password", "required": true, "placeholder": "sk-..."}
+      ],
+      "test_fn": "openai"
+    }
+  },
+
+  "key_mapping": {
+    "openai": {"credential_type": "openai_api", "field": "api_key"}
+  },
+
+  "agents": {},
+
+  "orchestrator": {
+    "enabled": false,
+    "model": "gpt-4o-mini",
+    "system_prompt": "Du bist der AgentCore24 Orchestrator. Antworte auf Deutsch, kurz und praezise."
+  },
+
+  "telegram": {
+    "enabled": false,
+    "start_text": "Ich bin dein AgentCore24 Bot. Schreib mir was du brauchst!",
+    "help_text": "Schreib mir einfach was du brauchst und ich helfe dir.",
+    "commands": []
+  },
+
+  "workflows": [],
+
+  "dsgvo": {
+    "enabled": true,
+    "data_categories": ["lead_data", "email_content", "crm_entry", "form_submission"],
+    "consent_types": ["legitimate_interest", "explicit_consent"]
+  },
+
   "automations": [
     {
       "name": "System-Check",
-      "description": "Prüft ob alle Systeme funktionieren",
+      "description": "Prueft ob alle Systeme funktionieren",
       "schedule": "*/5 * * * *",
       "enabled": true,
       "steps": [
@@ -24,13 +64,7 @@
       "provider": "openai",
       "label": "OpenAI",
       "emoji": "\ud83e\udd16",
-      "guide": "1. Gehe zu platform.openai.com\n2. Klicke API Keys\n3. Create new key\n4. Kopiere und füge hier ein"
-    },
-    {
-      "provider": "slack",
-      "label": "Slack Webhook",
-      "emoji": "\ud83d\udcac",
-      "guide": "1. Gehe zu api.slack.com/apps\n2. Erstelle eine neue App\n3. Aktiviere Incoming Webhooks\n4. Kopiere die Webhook-URL"
+      "guide": "1. Gehe zu platform.openai.com\n2. Klicke API Keys\n3. Create new key\n4. Kopiere und fuege hier ein"
     }
   ]
 }

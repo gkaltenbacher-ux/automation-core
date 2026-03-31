@@ -1,6 +1,10 @@
 """
 Verschlüsselung — Fernet (AES-128 + HMAC) für API-Keys.
 MASTER_KEY aus .env wird als Fernet-Schlüssel verwendet.
+
+LEGACY: Wird durch backend/credentials.py ersetzt.
+Bleibt fuer Rueckwaertskompatibilitaet mit bestehenden Projekten.
+Neue Projekte sollten CredentialManager aus credentials.py verwenden.
 """
 
 from cryptography.fernet import Fernet, InvalidToken
