@@ -4,9 +4,15 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./data:/app/data
+      - app_data:/app/data
       - ./config:/app/config
-      - ./blocks:/app/blocks
-    env_file:
-      - .env
+    environment:
+      - DATA_DIR=/app/data
+      - DASHBOARD_PASSWORD=${DASHBOARD_PASSWORD:-}
+      - BASE_URL=${BASE_URL:-http://localhost:8000}
+      - FORCE_HTTPS=${FORCE_HTTPS:-false}
     restart: unless-stopped
+
+volumes:
+  app_data:
+    name: ${PROJECT_NAME:-agentcore}_data

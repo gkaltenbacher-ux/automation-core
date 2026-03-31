@@ -77,7 +77,7 @@
     "startup": "ALLES in lifespan, NICHT in on_event('startup') — kollidieren in neueren FastAPI Versionen.",
     "config_path": "Im Container: /app/config/client.json. Lokal: config/client.json. Fallback-Logik noetig.",
     "tool_config": "shared_context mit tool_config an ALLE Komponenten weitergeben (Agents, Tools, Workflows).",
-    "credentials": "SQLite in /data/ Volume → ueberlebt Redeploys. NIEMALS in Container-Filesystem.",
+    "credentials": "SQLite in /data/ Volume. MUSS Named Volume sein (nicht Bind-Mount) damit Coolify es nicht loescht. docker-compose: 'volumes: app_data: name: projektname_data'",
     "zero_downtime": "Coolify Rolling Deploy. Samstag Nacht. Git Tag vor Deploy."
   },
 
