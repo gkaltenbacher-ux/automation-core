@@ -1,21 +1,23 @@
 {
-  "version": "4.0",
+  "version": "5.0",
   "last_updated": "2026-03-31",
 
   "system_status": {
-    "phase": "9D komplett — Lead-System umgebaut",
-    "next": "Bereit fuer naechsten Kunden oder Lead-System testen + deployen",
-    "core_features": [
-      "Credential-Management (config-getrieben, Fernet)",
-      "DSGVO-Modul (Consent, Export, Loeschung, Audit)",
-      "Orchestrator (dynamisch, OpenAI Function Calling)",
-      "Workflow-Engine (Sequential, Pause/Resume)",
-      "Cost-Tracking (pro Agent, pro Call)",
-      "Dashboard (7 Standard-Tabs)",
-      "Blueprint-System (Projekt-Vorlagen)",
-      "Telegram Bot (optional, config-getrieben)",
-      "Tool-Registry (Auto-Discovery)",
-      "Agent-Registry (Auto-Discovery)"
+    "phase": "System robust gemacht — alle Tools standardisiert",
+    "next": "End-to-End Test mit echten API-Keys"
+  },
+
+  "tool_template": {
+    "description": "Jedes neue Tool MUSS diesem Muster folgen",
+    "pattern": "TOOL_NAME, TOOL_DESCRIPTION, TOOL_PARAMETERS oben. async def run(params, context) mit: 1) log aus context holen, 2) tool_config lesen, 3) try/except um Block-Aufruf, 4) Logging bei Start+Ende+Fehler, 5) return {success, data, error}",
+    "referenz": "tools/generate_text.py ist das beste Beispiel",
+    "regeln": [
+      "IMMER try/except um den Block-Aufruf",
+      "IMMER context.get('log') nutzen fuer Logging",
+      "IMMER context.get('tool_config', {}).get(TOOL_NAME, {}) fuer Config",
+      "IMMER {success: True/False, data: {...}, error: '...'} zurueckgeben",
+      "NIEMALS API-Keys hardcoden — immer via context['get_api_key']",
+      "Bei fehlenden Parametern: sinnvoller Default oder Fehler zurueckgeben"
     ]
   },
 
@@ -23,42 +25,60 @@
     "lead_researcher": {
       "tools": ["scrape_google_maps", "scrape_linkedin", "extract_emails", "score_leads", "generate_lead_id", "check_duplicate"],
       "model": "gpt-4o-mini",
+      "logik": "Feste Sequenz: scrape → score → id → dedup. Kein LLM fuer Tool-Auswahl.",
       "bewaehrt_in": ["grischa_agentcore24"]
     },
     "outreach_agent": {
       "tools": ["generate_text", "send_gmail"],
       "model": "gpt-4o-mini",
-      "bewaehrt_in": ["grischa_agentcore24"],
-      "regel": "E-Mails NIE ohne explizite Bestaetigung senden"
+      "logik": "LLM nur fuer Text-Generierung. E-Mail NIE ohne Bestaetigung senden.",
+      "bewaehrt_in": ["grischa_agentcore24"]
     },
     "crm_agent": {
       "tools": ["sync_notion", "check_duplicate"],
       "model": "gpt-4o-mini",
+      "logik": "Feste Logik: create/update/read. Kein LLM noetig.",
       "bewaehrt_in": ["grischa_agentcore24"]
     }
   },
 
   "tool_learnings": {
-    "scrape_google_maps": "Actor: compass~crawler-google-places. searchStringsArray + locationQuery.",
-    "scrape_linkedin": "Actor: harvestapi~linkedin-profile-search. Max 25 Leads realistisch.",
-    "extract_emails": "Actor: alex_claw~website-email-extractor. Feld heisst 'urls' NICHT 'startUrls'.",
-    "sync_notion": "Rate-Limit 0.35s Delay. Lead-ID muss Title-Feld sein. Batch-Size 10.",
-    "send_gmail": "SMTP_SSL Port 465. 1 Sek Pause zwischen E-Mails. App-Password statt OAuth."
+    "scrape_google_maps": {
+      "actor": "compass~crawler-google-places",
+      "json_input": {"searchStringsArray": [], "locationQuery": "", "maxCrawledPlacesPerSearch": 50, "scrapeContacts": true, "website": "withWebsite"},
+      "wichtig": "searchStringsArray ist ein ARRAY, locationQuery ist ein STRING"
+    },
+    "scrape_linkedin": {
+      "actor": "harvestapi~linkedin-profile-search",
+      "json_input": {"searchQuery": "", "currentJobTitles": [], "locations": [], "maxItems": 25},
+      "wichtig": "Max 15 pro Woche realistisch. Felder: currentJobTitle, industryName, currentCompany extrahieren",
+      "max_pro_woche": 15
+    },
+    "extract_emails": {
+      "actor": "alex_claw~website-email-extractor",
+      "json_input": {"urls": [], "extractPhones": true, "extractSocials": true, "maxPagesPerSite": 10},
+      "wichtig": "Feld heisst 'urls' NICHT 'startUrls'"
+    },
+    "sync_notion": {
+      "wichtig": "Lead-ID = Title-Feld. Rate-Limit 0.35s Delay. Batch-Size 10. Database-ID pro Tool konfigurierbar.",
+      "felder_mapping": "name, email, phone, website, branche, position, company, score, status, lead_id"
+    },
+    "send_gmail": {
+      "wichtig": "SMTP_SSL Port 465. 1 Sek Pause zwischen E-Mails. App-Password statt OAuth.",
+      "sicherheit": "E-Mails NIE ohne Bestaetigung senden"
+    },
+    "score_leads": {
+      "wichtig": "Kriterien MUESSEN flexibel sein — branche_keywords und location_keywords statt hardcoded. Threshold im Dashboard editierbar."
+    }
   },
 
   "deployment_learnings": {
-    "coolify": "SSL: Regenerate Certificate. Container Restart: docker compose up -d.",
-    "docker": "DATA_DIR als Environment Variable. Health-Check: /api/health.",
-    "dashboard": "EINE HTML mit Alpine.js. Textarea statt Monaco fuer Prompt-Editor."
-  },
-
-  "blueprints": {
-    "lead_generation": {
-      "agents": ["lead_researcher", "outreach_agent", "crm_agent"],
-      "credentials": ["openai_api", "apify_api", "notion_api", "gmail", "telegram_bot"],
-      "setup_dauer": "1-2 Stunden",
-      "monatliche_kosten": "CHF 20-50"
-    }
+    "dockerfile": "agents/ und tools/ MUESSEN in COPY stehen! Vergessen = 0 Agents im Container.",
+    "startup": "ALLES in lifespan, NICHT in on_event('startup') — kollidieren in neueren FastAPI Versionen.",
+    "config_path": "Im Container: /app/config/client.json. Lokal: config/client.json. Fallback-Logik noetig.",
+    "tool_config": "shared_context mit tool_config an ALLE Komponenten weitergeben (Agents, Tools, Workflows).",
+    "credentials": "SQLite in /data/ Volume → ueberlebt Redeploys. NIEMALS in Container-Filesystem.",
+    "zero_downtime": "Coolify Rolling Deploy. Samstag Nacht. Git Tag vor Deploy."
   },
 
   "optimization": {
@@ -69,9 +89,17 @@
         "repo": "kunde-grischa-leadsystem",
         "last_optimized": "2026-03-31",
         "config_version": "2.0",
-        "applied_learnings": []
+        "applied_learnings": ["tool_template_v1", "flexible_scoring", "tool_config_chain_fix"]
       }
-    },
-    "pending_improvements": []
+    }
+  },
+
+  "blueprints": {
+    "lead_generation": {
+      "agents": ["lead_researcher", "outreach_agent", "crm_agent"],
+      "credentials": ["openai_api", "apify_api", "notion_api", "gmail", "telegram_bot"],
+      "setup_dauer": "1-2 Stunden",
+      "monatliche_kosten": "CHF 20-50"
+    }
   }
 }
