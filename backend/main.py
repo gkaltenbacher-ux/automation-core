@@ -84,18 +84,25 @@ dsgvo_manager = create_dsgvo_manager(_client_config, data_dir=_data_dir)
 cost_tracker = CostTracker(data_dir=_data_dir)
 
 # --- Tool + Agent Registry ---
+_tool_config = _client_config.get("tool_config", {})
 _tool_registry = load_tool_registry()
-_agent_context = {
+
+# tool_config in Agent-Configs einfuegen
+for _a_name in _client_config.get("agents", {}):
+    _client_config["agents"][_a_name]["_tool_config"] = _tool_config
+
+_shared_context = {
     "get_api_key": get_api_key,
     "log": log,
     "db": db,
     "dsgvo": dsgvo_manager,
     "cost_tracker": cost_tracker,
+    "tool_config": _tool_config,
 }
 _agent_registry = load_agent_registry(
     tool_registry=_tool_registry,
     config=_client_config,
-    context=_agent_context,
+    context=_shared_context,
 )
 
 # --- Orchestrator ---
@@ -111,7 +118,7 @@ orchestrator = Orchestrator(
 workflow_engine = WorkflowEngine(
     agent_registry=_agent_registry,
     tool_registry=_tool_registry,
-    context=_agent_context,
+    context=_shared_context,
     data_dir=_data_dir,
 )
 
